@@ -274,6 +274,18 @@ export default function Debug() {
 
   return (
     <Flex direction="column" gap="20px">
+      <Alert.Root status="error">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>Chrome or Edge required</Alert.Title>
+          <Alert.Description>
+            This tool uses the Web Serial API which is <b>only supported in
+            Chrome and Edge</b>. Safari, Firefox, and other browsers will not
+            work.
+          </Alert.Description>
+        </Alert.Content>
+      </Alert.Root>
+
       <Stack gap={3} as="section">
         <div>
           <Heading size="xl">Debug controls</Heading>
@@ -301,8 +313,7 @@ export default function Debug() {
             <p>
               <b>Identify firmware in both partitions</b> will read both app0
               and app1 partitions and automatically identify which firmware is
-              installed on each (Official English, Official Chinese, CrossPoint
-              Community, or Custom).
+              installed on each (CrossPoint Community or Custom/Unknown).
             </p>
           </Stack>
         </div>

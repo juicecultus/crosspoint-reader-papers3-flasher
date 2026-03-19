@@ -30,6 +30,18 @@ export default function Home() {
 
   return (
     <Flex direction="column" gap="20px">
+      <Alert.Root status="error">
+        <Alert.Indicator />
+        <Alert.Content>
+          <Alert.Title>Chrome or Edge required</Alert.Title>
+          <Alert.Description>
+            This tool uses the Web Serial API which is <b>only supported in
+            Chrome and Edge</b>. Safari, Firefox, and other browsers will not
+            work. Please open this page in Chrome or Edge before proceeding.
+          </Alert.Description>
+        </Alert.Content>
+      </Alert.Root>
+
       <Alert.Root status="warning">
         <Alert.Indicator />
         <Alert.Content>
@@ -39,15 +51,17 @@ export default function Home() {
               <p>
                 I've tried to make this foolproof and while the likelihood of
                 unrecoverable things going wrong is extremely low, it's never
-                zero. So proceed with care and make sure to grab a backup using{' '}
-                <b>Save full flash</b> before flashing your device.
+                zero. So proceed with care.
               </p>
               <p>
                 Once you start <b>Write flash from file</b> or{' '}
                 <b>Flash CrossPoint firmware</b>, you should avoid disconnecting
                 your device or closing the tab until the operation is complete.
-                Writing a full flash from your backup should always restore your
-                device to its old state.
+              </p>
+              <p>
+                If your device is not detected, you may need to enter download
+                mode manually: <b>hold the BOOT button (G0) while pressing
+                the RST button</b>, then release both.
               </p>
             </Stack>
           </Alert.Description>
@@ -59,16 +73,21 @@ export default function Home() {
           <Heading size="xl">Full flash controls</Heading>
           <Stack gap={1} color="grey" textStyle="sm">
             <p>
-              These actions will allow you to take a full backup of your M5Stack
-              Paper S3 device in order to be able to restore it in the case that
-              anything goes wrong.
+              These actions allow you to read or write the entire 16 MB flash
+              of your M5Stack Paper S3.
             </p>
             <p>
               <b>Save full flash</b> will read your device's flash and save it
-              as <Em>flash.bin</Em>. This will take around 25 minutes to
-              complete. You can use that file (or someone else's) with{' '}
-              <b>Write full flash from file</b> to overwrite your device's
-              entire flash.
+              as <Em>flash.bin</Em>. This will take around 25 minutes.
+              You can use that file with <b>Write full flash from file</b> to
+              restore your device later.
+            </p>
+            <p>
+              <b>Note:</b> The M5Stack Paper S3 does not ship with downloadable
+              factory firmware. If you want to preserve your stock firmware, use{' '}
+              <b>Save full flash</b> to create a backup <Em>before</Em> flashing
+              CrossPoint. There is no other way to restore the original M5Stack
+              firmware.
             </p>
           </Stack>
         </div>
@@ -182,7 +201,8 @@ export default function Home() {
           <Alert.Title>Device restart instructions</Alert.Title>
           <Alert.Description>
             Once you complete a write operation, you may need to restart your
-            M5Stack Paper S3 device by pressing the reset button.
+            M5Stack Paper S3 by pressing the <b>RST</b> button on the side of
+            the device.
           </Alert.Description>
         </Alert.Content>
       </Alert.Root>
