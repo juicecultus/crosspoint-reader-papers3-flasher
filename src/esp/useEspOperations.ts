@@ -65,7 +65,7 @@ export function useEspOperations() {
         )
       ) {
         throw new Error(
-          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint or official firmware with the default partition table.\nGot ${JSON.stringify(
+          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint PaperS3 firmware with the default partition table.\nGot ${JSON.stringify(
             partitionTable,
             null,
             2,
@@ -157,7 +157,7 @@ export function useEspOperations() {
         )
       ) {
         throw new Error(
-          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint or official firmware with the default partition table.\nGot ${JSON.stringify(
+          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint PaperS3 firmware with the default partition table.\nGot ${JSON.stringify(
             partitionTable,
             null,
             2,

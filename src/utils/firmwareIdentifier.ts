@@ -150,7 +150,7 @@ export function identifyFirmware(firmwareData: Uint8Array): FirmwareInfo {
     return {
       type: 'crosspoint',
       version,
-      displayName: 'CrossPoint Community Reader',
+      displayName: 'CrossPoint PaperS3',
     };
   }
 

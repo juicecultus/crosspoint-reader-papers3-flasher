@@ -55,7 +55,7 @@ export default function Home() {
               </p>
               <p>
                 Once you start <b>Write flash from file</b> or{' '}
-                <b>Flash CrossPoint firmware</b>, you should avoid disconnecting
+                <b>Flash CrossPoint PaperS3 firmware</b>, you should avoid disconnecting
                 your device or closing the tab until the operation is complete.
               </p>
               <p>
@@ -86,7 +86,7 @@ export default function Home() {
               <b>Note:</b> The M5Stack Paper S3 does not ship with downloadable
               factory firmware. If you want to preserve your stock firmware, use{' '}
               <b>Save full flash</b> to create a backup <Em>before</Em> flashing
-              CrossPoint. There is no other way to restore the original M5Stack
+              CrossPoint PaperS3. There is no other way to restore the original M5Stack
               firmware.
             </p>
           </Stack>
@@ -128,8 +128,8 @@ export default function Home() {
               device using <b>Save full flash</b> above.
             </p>
             <p>
-              <b>Flash CrossPoint firmware</b> will download the latest
-              CrossPoint firmware for M5Stack Paper S3, overwrite the backup
+              <b>Flash CrossPoint PaperS3 firmware</b> will download the latest
+              CrossPoint PaperS3 firmware for M5Stack Paper S3, overwrite the backup
               partition with the new firmware, and swap over to using this
               partition (leaving your existing firmware as the new backup). This
               is significantly faster than a full flash write and will retain
@@ -145,7 +145,7 @@ export default function Home() {
             disabled={isRunning || !crossPointFirmwareVersions}
             loading={!crossPointFirmwareVersions}
           >
-            Flash CrossPoint firmware (
+            Flash CrossPoint PaperS3 firmware (
             {crossPointFirmwareVersions?.crossPoint.version ?? '...'}) -{' '}
             {crossPointFirmwareVersions?.crossPoint.releaseDate ?? '...'}
           </Button>

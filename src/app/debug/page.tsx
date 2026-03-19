@@ -313,7 +313,7 @@ export default function Debug() {
             <p>
               <b>Identify firmware in both partitions</b> will read both app0
               and app1 partitions and automatically identify which firmware is
-              installed on each (CrossPoint Community or Custom/Unknown).
+              installed on each (CrossPoint PaperS3 or Custom/Unknown).
             </p>
           </Stack>
         </div>
