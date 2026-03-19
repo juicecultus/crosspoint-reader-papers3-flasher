@@ -213,9 +213,6 @@ function FirmwareIdentificationDebug({
     type: FirmwareInfo['type'],
   ): 'green' | 'orange' | 'blue' | 'gray' => {
     switch (type) {
-      case 'official-english':
-      case 'official-chinese':
-        return 'green';
       case 'crosspoint':
         return 'blue';
       case 'unknown':
@@ -282,9 +279,9 @@ export default function Debug() {
           <Heading size="xl">Debug controls</Heading>
           <Stack gap={1} color="grey" textStyle="sm">
             <p>
-              These are few tools to help debugging / administering your Xtink
-              device. They’re designed to be used by those who are intentionally
-              messing around with their device.
+              These are few tools to help debugging / administering your M5Stack
+              Paper S3 device. They're designed to be used by those who are
+              intentionally messing around with their device.
             </p>
             <p>
               <b>Read otadata partition</b> will read the raw data out of the{' '}

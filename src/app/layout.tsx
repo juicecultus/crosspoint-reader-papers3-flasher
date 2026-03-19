@@ -7,8 +7,8 @@ import HeaderBar from '@/components/HeaderBar';
 import { Container } from '@chakra-ui/react';
 
 export const metadata: Metadata = {
-  title: 'Xteink Flash Tools',
-  description: 'Web based tool to help flash the Xteink device',
+  title: 'Paper S3 Flash Tools',
+  description: 'Web based tool to help flash the M5Stack Paper S3 device',
 };
 
 export default function RootLayout({

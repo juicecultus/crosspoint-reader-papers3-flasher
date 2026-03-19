@@ -1,10 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  getCommunityFirmware,
-  getOfficialFirmware,
-} from '@/remote/firmwareFetcher';
+import { getCrossPointFirmware } from '@/remote/firmwareFetcher';
 import { downloadData } from '@/utils/download';
 import { wrapWithWakeLock } from '@/utils/wakelock';
 import {
@@ -120,12 +117,8 @@ export function useEspOperations() {
     await runStep('Reset device', () => espController.disconnect());
   };
 
-  const flashEnglishFirmware = async () =>
-    flashRemoteFirmware(() => getOfficialFirmware('en'));
-  const flashChineseFirmware = async () =>
-    flashRemoteFirmware(() => getOfficialFirmware('ch'));
   const flashCrossPointFirmware = async () =>
-    flashRemoteFirmware(() => getCommunityFirmware('CrossPoint'));
+    flashRemoteFirmware(() => getCrossPointFirmware());
 
   const flashCustomFirmware = async (getFile: () => File | undefined) => {
     initializeSteps([
@@ -531,8 +524,6 @@ export function useEspOperations() {
     stepData,
     isRunning,
     actions: {
-      flashEnglishFirmware: wrapWithRunning(flashEnglishFirmware),
-      flashChineseFirmware: wrapWithRunning(flashChineseFirmware),
       flashCrossPointFirmware: wrapWithRunning(flashCrossPointFirmware),
       flashCustomFirmware: wrapWithRunning(flashCustomFirmware),
       saveFullFlash: wrapWithRunning(saveFullFlash),

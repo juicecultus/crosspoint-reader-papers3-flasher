@@ -1,5 +1,5 @@
 export interface FirmwareInfo {
-  type: 'official-english' | 'official-chinese' | 'crosspoint' | 'unknown';
+  type: 'crosspoint' | 'unknown';
   version: string;
   displayName: string;
 }
@@ -122,24 +122,16 @@ function extractVersion(data: Uint8Array, searchLimit = 25000): string {
 
 /**
  * Identify firmware type and extract version information
- * Uses XTOS proximity check as the sole discriminator for official firmwares
- * Unfortunately, inherently brittle, due to potential changes to the official firmware.
  *
  * Detection strategy:
  * 1. Validate ESP32 image structure
- * 2. Find version string (V3.x.x pattern)
- * 3. Check what appears after the version:
- *    - If "XTOS " appears within 50 bytes → Chinese firmware
- *    - If no "XTOS " and valid ESP32 image → English firmware
- * 4. Check for CrossPoint patterns
+ * 2. Check for CrossPoint patterns
+ * 3. Extract version string
  *
  * @param firmwareData - The raw firmware binary data
  * @returns FirmwareInfo object with type, version, and display name
  */
 export function identifyFirmware(firmwareData: Uint8Array): FirmwareInfo {
-  // Validate it's a real ESP32 firmware image
-  const isValidImage = isValidEsp32Image(firmwareData);
-
   // Search in first 25KB for version
   const searchLimit = 25000;
   const searchArea = firmwareData.slice(
@@ -149,38 +141,6 @@ export function identifyFirmware(firmwareData: Uint8Array): FirmwareInfo {
 
   // Try to find version string
   const version = extractVersion(searchArea);
-  const hasVersion = version !== 'unknown';
-
-  // Find version location for proximity checks (only if we found a version)
-  const versionOffset = hasVersion ? findString(searchArea, version) : -1;
-
-  // Check for official firmwares using XTOS proximity
-  if (versionOffset !== -1 && version.startsWith('V') && isValidImage) {
-    // Check area around version (50 bytes before and after) for XTOS indicator
-    const startOffset = Math.max(0, versionOffset - 50);
-    const endOffset = Math.min(
-      searchArea.length,
-      versionOffset + version.length + 50,
-    );
-    const areaAroundVersion = searchArea.slice(startOffset, endOffset);
-
-    // Chinese firmware has "XTOS" nearby version
-    if (findString(areaAroundVersion, 'XTOS') !== -1) {
-      return {
-        type: 'official-chinese',
-        version,
-        displayName: 'Official Chinese',
-      };
-    }
-
-    // English firmware has NO XTOS around version
-    // If we have a V-pattern version, valid ESP32 image, but no XTOS → English
-    return {
-      type: 'official-english',
-      version,
-      displayName: 'Official English',
-    };
-  }
 
   // Check for CrossPoint Community firmware
   if (
