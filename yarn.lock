@@ -4837,6 +4837,50 @@ __metadata:
   languageName: node
   linkType: hard
 
+"papers3-flasher@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "papers3-flasher@workspace:."
+  dependencies:
+    "@chakra-ui/react": "npm:^3.32.0"
+    "@emotion/react": "npm:^11.14.0"
+    "@eslint/compat": "npm:^2.0.2"
+    "@eslint/js": "npm:^9.39.2"
+    "@stylistic/eslint-plugin": "npm:^5.7.1"
+    "@types/dom-serial": "npm:^1.0.6"
+    "@types/eslint-plugin-jsx-a11y": "npm:^6.10.1"
+    "@types/jest": "npm:^30.0.0"
+    "@types/node": "npm:^24.10.11"
+    "@types/react": "npm:^19.2.13"
+    "@types/react-dom": "npm:^19.2.3"
+    "@vercel/functions": "npm:^3.4.1"
+    babel-plugin-react-compiler: "npm:^1.0.0"
+    classnames: "npm:^2.5.1"
+    crc: "npm:^4.3.2"
+    eslint: "npm:^9.39.2"
+    eslint-config-airbnb-extended: "npm:^2.3.3"
+    eslint-config-prettier: "npm:^10.1.8"
+    eslint-import-resolver-typescript: "npm:^4.4.4"
+    eslint-plugin-import-x: "npm:^4.16.1"
+    eslint-plugin-jsx-a11y: "npm:^6.10.2"
+    eslint-plugin-prettier: "npm:^5.5.5"
+    eslint-plugin-react: "npm:^7.37.5"
+    eslint-plugin-react-hooks: "npm:^7.0.1"
+    esptool-js: "patch:esptool-js@npm%3A0.5.7#~/.yarn/patches/esptool-js-npm-0.5.7-bd6223d76a.patch"
+    globals: "npm:^16.5.0"
+    husky: "npm:^9.1.7"
+    lint-staged: "npm:^16.2.7"
+    next: "npm:16.1.6"
+    next-themes: "npm:^0.4.6"
+    prettier: "npm:^3.8.1"
+    react: "npm:^19.2.4"
+    react-dom: "npm:^19.2.4"
+    react-icons: "npm:^5.5.0"
+    react-window: "npm:^2.2.6"
+    typescript: "npm:^5.9.3"
+    typescript-eslint: "npm:^8.54.0"
+  languageName: unknown
+  linkType: soft
+
 "parent-module@npm:^1.0.0":
   version: 1.0.1
   resolution: "parent-module@npm:1.0.1"
@@ -5992,50 +6036,6 @@ __metadata:
   checksum: 10c0/3305839b9a0d6fb930cb63a52f34d3936013d8b0682ff3ec133c9826512620f213800ffa19ea22904876d5b7e9a3c1f40682f03597d986a4ca881fa7b033688c
   languageName: node
   linkType: hard
-
-"xteink-flasher@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "xteink-flasher@workspace:."
-  dependencies:
-    "@chakra-ui/react": "npm:^3.32.0"
-    "@emotion/react": "npm:^11.14.0"
-    "@eslint/compat": "npm:^2.0.2"
-    "@eslint/js": "npm:^9.39.2"
-    "@stylistic/eslint-plugin": "npm:^5.7.1"
-    "@types/dom-serial": "npm:^1.0.6"
-    "@types/eslint-plugin-jsx-a11y": "npm:^6.10.1"
-    "@types/jest": "npm:^30.0.0"
-    "@types/node": "npm:^24.10.11"
-    "@types/react": "npm:^19.2.13"
-    "@types/react-dom": "npm:^19.2.3"
-    "@vercel/functions": "npm:^3.4.1"
-    babel-plugin-react-compiler: "npm:^1.0.0"
-    classnames: "npm:^2.5.1"
-    crc: "npm:^4.3.2"
-    eslint: "npm:^9.39.2"
-    eslint-config-airbnb-extended: "npm:^2.3.3"
-    eslint-config-prettier: "npm:^10.1.8"
-    eslint-import-resolver-typescript: "npm:^4.4.4"
-    eslint-plugin-import-x: "npm:^4.16.1"
-    eslint-plugin-jsx-a11y: "npm:^6.10.2"
-    eslint-plugin-prettier: "npm:^5.5.5"
-    eslint-plugin-react: "npm:^7.37.5"
-    eslint-plugin-react-hooks: "npm:^7.0.1"
-    esptool-js: "patch:esptool-js@npm%3A0.5.7#~/.yarn/patches/esptool-js-npm-0.5.7-bd6223d76a.patch"
-    globals: "npm:^16.5.0"
-    husky: "npm:^9.1.7"
-    lint-staged: "npm:^16.2.7"
-    next: "npm:16.1.6"
-    next-themes: "npm:^0.4.6"
-    prettier: "npm:^3.8.1"
-    react: "npm:^19.2.4"
-    react-dom: "npm:^19.2.4"
-    react-icons: "npm:^5.5.0"
-    react-window: "npm:^2.2.6"
-    typescript: "npm:^5.9.3"
-    typescript-eslint: "npm:^8.54.0"
-  languageName: unknown
-  linkType: soft
 
 "yallist@npm:^3.0.2":
   version: 3.1.1
