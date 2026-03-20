@@ -12,7 +12,7 @@ interface CrossPointFirmwareVersions {
 
 export async function getCrossPointFirmwareRemoteData(): Promise<CrossPointFirmwareVersions> {
   const cache = getCache();
-  const cacheKey = 'firmware-versions.crosspoint-papers3.v1';
+  const cacheKey = 'firmware-versions.crosspoint-papers3.v2';
 
   const value = (await cache.get(cacheKey)) as CrossPointFirmwareVersions | null;
   if (value) {
