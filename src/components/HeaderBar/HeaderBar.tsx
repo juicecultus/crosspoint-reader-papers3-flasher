@@ -23,7 +23,7 @@ export default function HeaderBar() {
       <Container maxW="3xl">
         <Flex h={16} alignItems="center" gap={5}>
           <Heading size="md" color="header-bar.fg">
-            <Link href="/">Paper S3 Flash Tools</Link>
+            <Link href="/">EinkHub Flash Tools</Link>
           </Heading>
           <Flex h={16} alignItems="center" gap={2}>
             <Text textStyle="sm">
@@ -43,7 +43,7 @@ export default function HeaderBar() {
               variant="outline"
               onClick={() =>
                 window.open(
-                  'https://github.com/juicecultus/crosspoint-reader-papers3',
+                  'https://github.com/juicecultus/crosspoint-reader-papers3-flasher',
                   '_blank',
                 )
               }

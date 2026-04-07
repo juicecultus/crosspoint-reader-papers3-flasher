@@ -2,12 +2,18 @@
 
 import { getCache } from '@vercel/functions';
 
+interface FirmwareRelease {
+  version: string;
+  releaseDate: string;
+  downloadUrl: string;
+}
+
 interface CrossPointFirmwareVersions {
-  crossPoint: {
-    version: string;
-    releaseDate: string;
-    downloadUrl: string;
-  };
+  crossPoint: FirmwareRelease;
+}
+
+interface X3FirmwareVersions {
+  x3: FirmwareRelease;
 }
 
 export async function getCrossPointFirmwareRemoteData(): Promise<CrossPointFirmwareVersions> {
@@ -50,6 +56,52 @@ export async function getCrossPointFirmwareRemoteData(): Promise<CrossPointFirmw
 export async function getCrossPointFirmware() {
   const releaseData = await getCrossPointFirmwareRemoteData().then(
     (data) => data.crossPoint,
+  );
+
+  const response = await fetch(releaseData.downloadUrl);
+  return new Uint8Array(await response.arrayBuffer());
+}
+
+export async function getX3FirmwareRemoteData(): Promise<X3FirmwareVersions> {
+  const cache = getCache();
+  const cacheKey = 'firmware-versions.crosspoint-x3.v1';
+
+  const value = (await cache.get(cacheKey)) as X3FirmwareVersions | null;
+  if (value) {
+    return value;
+  }
+
+  const releaseData = await fetch(
+    'https://api.github.com/repos/juicecultus/crosspoint-reader/releases/latest',
+  ).then((resp) => resp.json());
+
+  const firmwareAsset = releaseData.assets.find((asset: any) =>
+    asset.name.endsWith('firmware.bin'),
+  );
+  if (!firmwareAsset) {
+    throw new Error('CrossPoint X3 firmware asset not found');
+  }
+
+  const data = {
+    x3: {
+      version: releaseData.tag_name,
+      releaseDate: new Date(releaseData.published_at)
+        .toISOString()
+        .slice(0, 10),
+      downloadUrl: firmwareAsset.browser_download_url,
+    },
+  };
+
+  await cache.set(cacheKey, data, {
+    ttl: 60 * 60, // 1 hour
+  });
+
+  return data;
+}
+
+export async function getX3Firmware() {
+  const releaseData = await getX3FirmwareRemoteData().then(
+    (data) => data.x3,
   );
 
   const response = await fetch(releaseData.downloadUrl);

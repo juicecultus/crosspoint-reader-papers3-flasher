@@ -7,8 +7,8 @@ import HeaderBar from '@/components/HeaderBar';
 import { Container } from '@chakra-ui/react';
 
 export const metadata: Metadata = {
-  title: 'Paper S3 Flash Tools',
-  description: 'Web based tool to help flash the M5Stack Paper S3 device',
+  title: 'EinkHub Flash Tools',
+  description: 'Web based tool to flash CrossPoint firmware on Xteink X3 and M5Stack Paper S3 devices',
 };
 
 export default function RootLayout({

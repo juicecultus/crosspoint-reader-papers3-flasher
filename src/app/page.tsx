@@ -14,18 +14,22 @@ import {
 import FileUpload, { FileUploadHandle } from '@/components/FileUpload';
 import Steps from '@/components/Steps';
 import { useEspOperations } from '@/esp/useEspOperations';
-import { getCrossPointFirmwareRemoteData } from '@/remote/firmwareFetcher';
+import { getCrossPointFirmwareRemoteData, getX3FirmwareRemoteData } from '@/remote/firmwareFetcher';
 
 export default function Home() {
   const { actions, stepData, isRunning } = useEspOperations();
   const [crossPointFirmwareVersions, setCrossPointFirmwareVersions] = useState<{
     crossPoint: { version: string; releaseDate: string };
   } | null>(null);
+  const [x3FirmwareVersions, setX3FirmwareVersions] = useState<{
+    x3: { version: string; releaseDate: string };
+  } | null>(null);
   const fullFlashFileInput = useRef<FileUploadHandle>(null);
   const appPartitionFileInput = useRef<FileUploadHandle>(null);
 
   useEffect(() => {
     getCrossPointFirmwareRemoteData().then(setCrossPointFirmwareVersions);
+    getX3FirmwareRemoteData().then(setX3FirmwareVersions);
   }, []);
 
   return (
@@ -121,7 +125,36 @@ export default function Home() {
       <Separator />
       <Stack gap={3} as="section">
         <div>
-          <Heading size="xl">OTA fast flash controls</Heading>
+          <Heading size="xl">Xteink X3 firmware</Heading>
+          <Stack gap={1} color="grey" textStyle="sm">
+            <p>
+              Flash the latest CrossPoint firmware for the <b>Xteink X3</b> e-reader.
+              This is a preview release with improved text antialiasing (grayscale
+              rendering, reduced white lines, reduced ghosting).
+            </p>
+            <p>
+              Before using this, I'd strongly recommend taking a backup of your
+              device using <b>Save full flash</b> above.
+            </p>
+          </Stack>
+        </div>
+        <Stack as="section">
+          <Button
+            variant="subtle"
+            onClick={actions.flashX3Firmware}
+            disabled={isRunning || !x3FirmwareVersions}
+            loading={!x3FirmwareVersions}
+          >
+            Flash CrossPoint X3 firmware (
+            {x3FirmwareVersions?.x3.version ?? '...'}) -{' '}
+            {x3FirmwareVersions?.x3.releaseDate ?? '...'}
+          </Button>
+        </Stack>
+      </Stack>
+      <Separator />
+      <Stack gap={3} as="section">
+        <div>
+          <Heading size="xl">M5Stack Paper S3 firmware</Heading>
           <Stack gap={1} color="grey" textStyle="sm">
             <p>
               Before using this, I'd strongly recommend taking a backup of your
