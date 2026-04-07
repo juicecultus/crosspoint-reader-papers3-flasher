@@ -18,22 +18,46 @@ import { usePathname } from 'next/navigation';
 
 export default function HeaderBar() {
   const pathname = usePathname();
+
+  // Determine the device context from the URL
+  const isX3 = pathname.startsWith('/x3');
+  const isPaperS3 = pathname.startsWith('/papers3');
+  const deviceBase = isX3 ? '/x3' : isPaperS3 ? '/papers3' : null;
+  const deviceLabel = isX3 ? 'Xteink X3' : isPaperS3 ? 'Paper S3' : null;
+
   return (
     <Box bg="header-bar.bg" px={4}>
       <Container maxW="3xl">
         <Flex h={16} alignItems="center" gap={5}>
           <Heading size="md" color="header-bar.fg">
-            <Link href="/">EinkHub Flash Tools</Link>
+            <Link href="/">EinkHub</Link>
           </Heading>
           <Flex h={16} alignItems="center" gap={2}>
-            <Text textStyle="sm">
-              <Link href="/">{pathname === '/' ? <b>Flash</b> : 'Flash'}</Link>
-            </Text>
-            <Text textStyle="sm">
-              <Link href="/debug">
-                {pathname === '/debug' ? <b>Debug</b> : 'Debug'}
-              </Link>
-            </Text>
+            {deviceBase ? (
+              <>
+                <Text textStyle="sm" color="header-bar.fg" fontWeight="bold">
+                  {deviceLabel}
+                </Text>
+                <Text textStyle="sm">
+                  <Link href={deviceBase}>
+                    {pathname === deviceBase ? <b>Flash</b> : 'Flash'}
+                  </Link>
+                </Text>
+                <Text textStyle="sm">
+                  <Link href={`${deviceBase}/debug`}>
+                    {pathname === `${deviceBase}/debug` ? (
+                      <b>Debug</b>
+                    ) : (
+                      'Debug'
+                    )}
+                  </Link>
+                </Text>
+              </>
+            ) : (
+              <Text textStyle="sm" color="header-bar.fg">
+                Select a device to get started
+              </Text>
+            )}
           </Flex>
           <Spacer />
 
