@@ -43,6 +43,3 @@ next-env.d.ts
 .idea
 .eslintcache
 .env*.local
-
-# large firmware binaries (hosted separately for deployment)
-/public/firmware/*.bin
