@@ -262,9 +262,14 @@ export function useEspOperations() {
       return c;
     });
 
-    await runStep('Write flash', () =>
-      espController.writeFullFlash(fileData, (_, p, t) =>
-        updateStepData('Write flash', { progress: { current: p, total: t } }),
+    await runStep(
+      'Write flash',
+      wrapWithWakeLock(() =>
+        espController.writeFullFlash(fileData, (_, p, t) =>
+          updateStepData('Write flash', {
+            progress: { current: p, total: t },
+          }),
+        ),
       ),
     );
 

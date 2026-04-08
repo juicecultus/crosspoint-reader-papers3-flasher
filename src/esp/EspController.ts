@@ -142,11 +142,24 @@ export default class EspController {
   ) {
     if (data.length !== 0x1000000) {
       throw new Error(
-        `Data length must be 0x1000000, but got 0x${data.length.toString().padStart(7, '0')}`,
+        `Data length must be 0x1000000, but got 0x${data.length.toString(16).padStart(7, '0')}`,
       );
     }
 
-    await this.writeData(data, 0, reportProgress);
+    await this.espLoader.writeFlash({
+      fileArray: [
+        {
+          data: this.espLoader.ui8ToBstr(data),
+          address: 0,
+        },
+      ],
+      flashSize: 'keep',
+      flashMode: 'keep',
+      flashFreq: 'keep',
+      eraseAll: true,
+      compress: false,
+      reportProgress,
+    });
   }
 
   async readOtadataPartition(
