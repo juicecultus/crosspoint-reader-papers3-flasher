@@ -13,14 +13,66 @@ import OtaPartition, { OtaPartitionDetails } from './OtaPartition';
 import useStepRunner from './useStepRunner';
 import EspController from './EspController';
 
-const expectedPartitionTable = [
-  { type: 'data-nvs', offset: 36864, size: 20480 },
-  { type: 'data-ota', offset: 57344, size: 8192 },
-  { type: 'app-ota_0', offset: 65536, size: 6553600 },
-  { type: 'app-ota_1', offset: 6619136, size: 6553600 },
-  { type: 'data-spiffs', offset: 13172736, size: 3538944 },
-  { type: 'data-coredump', offset: 16711680, size: 65536 },
+const expectedPartitionTables = [
+  // CrossPoint default partition layout
+  [
+    { type: 'data-nvs', offset: 36864, size: 20480 },
+    { type: 'data-ota', offset: 57344, size: 8192 },
+    { type: 'app-ota_0', offset: 65536, size: 6553600 },
+    { type: 'app-ota_1', offset: 6619136, size: 6553600 },
+    { type: 'data-spiffs', offset: 13172736, size: 3538944 },
+    { type: 'data-coredump', offset: 16711680, size: 65536 },
+  ],
+  // Official Xteink X3 partition layout
+  [
+    { type: 'data-nvs', offset: 36864, size: 20480 },
+    { type: 'data-ota', offset: 57344, size: 8192 },
+    { type: 'app-ota_0', offset: 65536, size: 7798784 },
+    { type: 'app-ota_1', offset: 7864320, size: 7798784 },
+    { type: 'data-spiffs', offset: 15663104, size: 1048576 },
+    { type: 'data-coredump', offset: 16711680, size: 65536 },
+  ],
 ];
+
+interface AppPartitionInfo {
+  app0Offset: number;
+  app0Size: number;
+  app1Offset: number;
+  app1Size: number;
+}
+
+function validatePartitionTable(
+  partitionTable: { type: string; offset: number; size: number }[],
+): AppPartitionInfo {
+  for (const expected of expectedPartitionTables) {
+    if (
+      partitionTable.length === expected.length &&
+      expected.every(
+        (e, i) =>
+          partitionTable[i]!.type === e.type &&
+          partitionTable[i]!.offset === e.offset &&
+          partitionTable[i]!.size === e.size,
+      )
+    ) {
+      const app0 = partitionTable.find((p) => p.type === 'app-ota_0')!;
+      const app1 = partitionTable.find((p) => p.type === 'app-ota_1')!;
+      return {
+        app0Offset: app0.offset,
+        app0Size: app0.size,
+        app1Offset: app1.offset,
+        app1Size: app1.size,
+      };
+    }
+  }
+
+  throw new Error(
+    `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint or official Xteink firmware with a supported partition table.\nGot ${JSON.stringify(
+      partitionTable,
+      null,
+      2,
+    )}`,
+  );
+}
 
 export function useEspOperations() {
   const { stepData, initializeSteps, updateStepData, runStep } =
@@ -54,25 +106,9 @@ export function useEspOperations() {
       return c;
     });
 
-    await runStep('Validate partition table', async () => {
+    const partitionInfo = await runStep('Validate partition table', async () => {
       const partitionTable = await espController.readPartitionTable();
-      if (
-        partitionTable.length !== expectedPartitionTable.length ||
-        expectedPartitionTable.some(
-          (expected, index) =>
-            partitionTable[index]!.type !== expected.type ||
-            partitionTable[index]!.offset !== expected.offset ||
-            partitionTable[index]!.size !== expected.size,
-        )
-      ) {
-        throw new Error(
-          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint ${deviceName} firmware with the default partition table.\nGot ${JSON.stringify(
-            partitionTable,
-            null,
-            2,
-          )}`,
-        );
-      }
+      return validatePartitionTable(partitionTable);
     });
 
     const firmwareFile = await runStep('Download firmware', getFirmware);
@@ -92,6 +128,9 @@ export function useEspOperations() {
       },
     );
 
+    const backupOffset = backupPartitionLabel === 'app0' ? partitionInfo.app0Offset : partitionInfo.app1Offset;
+    const backupSize = backupPartitionLabel === 'app0' ? partitionInfo.app0Size : partitionInfo.app1Size;
+
     const flashAppPartitionStepName = `Flash app partition (${backupPartitionLabel})`;
     updateStepData('Flash app partition', { name: flashAppPartitionStepName });
     await runStep(flashAppPartitionStepName, () =>
@@ -102,6 +141,8 @@ export function useEspOperations() {
           updateStepData(flashAppPartitionStepName, {
             progress: { current: p, total: t },
           }),
+        backupOffset,
+        backupSize,
       ),
     );
 
@@ -155,25 +196,9 @@ export function useEspOperations() {
       return c;
     });
 
-    await runStep('Validate partition table', async () => {
+    const partitionInfo = await runStep('Validate partition table', async () => {
       const partitionTable = await espController.readPartitionTable();
-      if (
-        partitionTable.length !== expectedPartitionTable.length ||
-        expectedPartitionTable.some(
-          (expected, index) =>
-            partitionTable[index]!.type !== expected.type ||
-            partitionTable[index]!.offset !== expected.offset ||
-            partitionTable[index]!.size !== expected.size,
-        )
-      ) {
-        throw new Error(
-          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint ${deviceName} firmware with the default partition table.\nGot ${JSON.stringify(
-            partitionTable,
-            null,
-            2,
-          )}`,
-        );
-      }
+      return validatePartitionTable(partitionTable);
     });
 
     const [otaPartition, backupPartitionLabel] = await runStep(
@@ -191,6 +216,9 @@ export function useEspOperations() {
       },
     );
 
+    const backupOffset = backupPartitionLabel === 'app0' ? partitionInfo.app0Offset : partitionInfo.app1Offset;
+    const backupSize = backupPartitionLabel === 'app0' ? partitionInfo.app0Size : partitionInfo.app1Size;
+
     const flashAppPartitionStepName = `Flash app partition (${backupPartitionLabel})`;
     updateStepData('Flash app partition', { name: flashAppPartitionStepName });
     await runStep(flashAppPartitionStepName, () =>
@@ -201,6 +229,8 @@ export function useEspOperations() {
           updateStepData(flashAppPartitionStepName, {
             progress: { current: p, total: t },
           }),
+        backupOffset,
+        backupSize,
       ),
     );
 

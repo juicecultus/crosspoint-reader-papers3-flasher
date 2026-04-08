@@ -192,9 +192,12 @@ export default class EspController {
       progress: number,
       totalSize: number,
     ) => void,
+    partitionOffset?: number,
+    partitionSize?: number,
   ) {
-    const offset = partitionLabel === 'app0' ? 0x10000 : 0x650000;
-    return this.espLoader.readFlash(offset, 0x640000, onPacketReceived);
+    const offset = partitionOffset ?? (partitionLabel === 'app0' ? 0x10000 : 0x650000);
+    const size = partitionSize ?? 0x640000;
+    return this.espLoader.readFlash(offset, size, onPacketReceived);
   }
 
   async readAppPartitionForIdentification(
@@ -203,6 +206,7 @@ export default class EspController {
       readSize = 0x6400, // Default to 25KB (0x6400) for fast identification
       offset = 0,
       onPacketReceived,
+      partitionOffset,
     }: {
       readSize?: number;
       offset?: number;
@@ -211,6 +215,7 @@ export default class EspController {
         progress: number,
         totalSize: number,
       ) => void;
+      partitionOffset?: number;
     } = {},
   ) {
     // Optimized read for firmware identification with flexible read size and offset:
@@ -219,7 +224,7 @@ export default class EspController {
     // In testing, most firmwares are identified within the first 25KB read, so reading the entire
     // partition is unnecessary in the majority of cases.
 
-    const baseOffset = partitionLabel === 'app0' ? 0x10000 : 0x650000;
+    const baseOffset = partitionOffset ?? (partitionLabel === 'app0' ? 0x10000 : 0x650000);
 
     return this.espLoader.readFlash(
       baseOffset + offset,
@@ -236,9 +241,12 @@ export default class EspController {
       written: number,
       total: number,
     ) => void,
+    partitionOffset?: number,
+    partitionSize?: number,
   ) {
-    if (data.length > 0x640000) {
-      throw new Error(`Data cannot be larger than 0x640000`);
+    const maxSize = partitionSize ?? 0x640000;
+    if (data.length > maxSize) {
+      throw new Error(`Data cannot be larger than 0x${maxSize.toString(16)}`);
     }
     if (data.length < 0xf0000) {
       throw new Error(
@@ -246,7 +254,7 @@ export default class EspController {
       );
     }
 
-    const offset = partitionLabel === 'app0' ? 0x10000 : 0x650000;
+    const offset = partitionOffset ?? (partitionLabel === 'app0' ? 0x10000 : 0x650000);
 
     await this.writeData(data, offset, reportProgress);
   }
