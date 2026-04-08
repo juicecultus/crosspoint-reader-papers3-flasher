@@ -36,6 +36,7 @@ export function useEspOperations() {
 
   const flashRemoteFirmware = async (
     getFirmware: () => Promise<Uint8Array>,
+    deviceName: string,
   ) => {
     initializeSteps([
       'Connect to device',
@@ -65,7 +66,7 @@ export function useEspOperations() {
         )
       ) {
         throw new Error(
-          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint PaperS3 firmware with the default partition table.\nGot ${JSON.stringify(
+          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint ${deviceName} firmware with the default partition table.\nGot ${JSON.stringify(
             partitionTable,
             null,
             2,
@@ -118,12 +119,12 @@ export function useEspOperations() {
   };
 
   const flashCrossPointFirmware = async () =>
-    flashRemoteFirmware(() => getCrossPointFirmware());
+    flashRemoteFirmware(() => getCrossPointFirmware(), 'PaperS3');
 
   const flashX3Firmware = async () =>
-    flashRemoteFirmware(() => getX3Firmware());
+    flashRemoteFirmware(() => getX3Firmware(), 'Xteink X3');
 
-  const flashCustomFirmware = async (getFile: () => File | undefined) => {
+  const flashCustomFirmware = async (getFile: () => File | undefined, deviceName: string = 'PaperS3') => {
     initializeSteps([
       'Read file',
       'Connect to device',
@@ -160,7 +161,7 @@ export function useEspOperations() {
         )
       ) {
         throw new Error(
-          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint PaperS3 firmware with the default partition table.\nGot ${JSON.stringify(
+          `Unexpected partition configuration. You can only use OTA fast flash controls on devices running CrossPoint ${deviceName} firmware with the default partition table.\nGot ${JSON.stringify(
             partitionTable,
             null,
             2,

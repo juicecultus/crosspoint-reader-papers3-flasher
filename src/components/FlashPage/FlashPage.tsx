@@ -166,8 +166,9 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
               variant="subtle"
               flexGrow={1}
               onClick={() =>
-                actions.flashCustomFirmware(() =>
-                  appPartitionFileInput.current?.getFile(),
+                actions.flashCustomFirmware(
+                  () => appPartitionFileInput.current?.getFile(),
+                  config.deviceName,
                 )
               }
               disabled={isRunning}

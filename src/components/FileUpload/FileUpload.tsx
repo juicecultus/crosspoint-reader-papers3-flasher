@@ -45,7 +45,7 @@ export default function FileUpload({
           </ChakraUpload.ClearTrigger>
         }
       >
-        <Input asChild disabled={disabled}>
+        <Input asChild disabled={disabled} cursor="pointer">
           <ChakraUpload.Trigger>
             <ChakraUpload.FileText lineClamp={1} />
           </ChakraUpload.Trigger>
