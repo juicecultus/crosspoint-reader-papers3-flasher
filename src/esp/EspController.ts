@@ -157,7 +157,7 @@ export default class EspController {
       flashMode: 'keep',
       flashFreq: 'keep',
       eraseAll: true,
-      compress: false,
+      compress: true,
       reportProgress,
     });
   }
