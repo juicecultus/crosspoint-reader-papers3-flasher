@@ -27,6 +27,10 @@ export interface DeviceConfig {
   stockFirmware?: {
     fetchVersions: () => Promise<{ en: string; ch: string }>;
   };
+  stockFullFlash?: {
+    version: string;
+    firmwareUrl: string;
+  };
 }
 
 export default function FlashPage({ config }: { config: DeviceConfig }) {
@@ -226,6 +230,57 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                 loading={!stockVersions}
               >
                 Flash stock Chinese firmware ({stockVersions?.ch ?? '...'})
+              </Button>
+            </Stack>
+          </Stack>
+        </>
+      )}
+      {config.stockFullFlash && (
+        <>
+          <Separator />
+          <Stack gap={3} as="section">
+            <div>
+              <Heading size="xl">Stock firmware recovery</Heading>
+              <Stack gap={1} color="grey" textStyle="sm">
+                <p>
+                  Restore your {config.deviceName} to the official Xteink stock
+                  firmware ({config.stockFullFlash.version}). This performs
+                  a <b>full flash write</b> which will erase all data on the
+                  device including settings, books, and any custom firmware.
+                  This will take around 25 minutes.
+                </p>
+              </Stack>
+            </div>
+            <Alert.Root status="warning">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Description>
+                  <Stack gap={1} textStyle="sm">
+                    <p>
+                      This firmware is the intellectual property of{' '}
+                      <b>Xteink</b> and is provided here solely for emergency
+                      recovery purposes. By proceeding, you acknowledge that
+                      this software is copyrighted by Xteink and that you use
+                      it entirely at your own risk. EinkHub is not affiliated
+                      with Xteink and provides no warranty or support for this
+                      firmware.
+                    </p>
+                  </Stack>
+                </Alert.Description>
+              </Alert.Content>
+            </Alert.Root>
+            <Stack as="section">
+              <Button
+                variant="subtle"
+                onClick={() =>
+                  actions.flashStockFullFlash(
+                    config.stockFullFlash!.firmwareUrl,
+                  )
+                }
+                disabled={isRunning}
+              >
+                Flash stock {config.deviceName} firmware (
+                {config.stockFullFlash.version}) — full flash
               </Button>
             </Stack>
           </Stack>

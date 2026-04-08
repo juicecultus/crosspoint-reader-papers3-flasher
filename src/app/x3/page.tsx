@@ -16,6 +16,10 @@ const x3Config: DeviceConfig = {
     'Once you complete a write operation, you may need to restart your Xteink X3 by pressing the RST button on the device.',
   fetchVersions: () => getX3FirmwareRemoteData().then((d) => d.x3),
   flashFirmwareAction: 'flashX3Firmware',
+  stockFullFlash: {
+    version: 'V5.1.6 EN',
+    firmwareUrl: '/firmware/XT_X3_flash_V5.1.6_EN.bin',
+  },
 };
 
 export default function X3Page() {

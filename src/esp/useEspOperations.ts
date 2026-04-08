@@ -381,6 +381,42 @@ export function useEspOperations() {
     return otaPartition;
   };
 
+  const flashStockFullFlash = async (firmwareUrl: string) => {
+    initializeSteps([
+      'Download firmware',
+      'Connect to device',
+      'Write flash',
+      'Reset device',
+    ]);
+
+    const firmwareFile = await runStep('Download firmware', async () => {
+      const response = await fetch(firmwareUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to download firmware: ${response.status} ${response.statusText}`);
+      }
+      return new Uint8Array(await response.arrayBuffer());
+    });
+
+    const espController = await runStep('Connect to device', async () => {
+      const c = await EspController.fromRequestedDevice();
+      await c.connect();
+      return c;
+    });
+
+    await runStep(
+      'Write flash',
+      wrapWithWakeLock(() =>
+        espController.writeFullFlash(firmwareFile, (_, p, t) =>
+          updateStepData('Write flash', {
+            progress: { current: p, total: t },
+          }),
+        ),
+      ),
+    );
+
+    await runStep('Reset device', () => espController.disconnect());
+  };
+
   const fakeWriteFullFlash = async () => {
     initializeSteps([
       'Read file',
@@ -543,6 +579,7 @@ export function useEspOperations() {
       flashX3Firmware: wrapWithRunning(flashX3Firmware),
       flashStockEnglishFirmware: wrapWithRunning(flashStockEnglishFirmware),
       flashStockChineseFirmware: wrapWithRunning(flashStockChineseFirmware),
+      flashStockFullFlash: wrapWithRunning(flashStockFullFlash),
       flashCustomFirmware: wrapWithRunning(flashCustomFirmware),
       saveFullFlash: wrapWithRunning(saveFullFlash),
       writeFullFlash: wrapWithRunning(writeFullFlash),
