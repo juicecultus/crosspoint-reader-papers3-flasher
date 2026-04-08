@@ -245,9 +245,9 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                 <p>
                   Restore your {config.deviceName} to the official Xteink stock
                   firmware ({config.stockFullFlash.version}). This performs
-                  a <b>full flash write</b> which will erase all data on the
-                  device including settings, books, and any custom firmware.
-                  This will take around 25 minutes.
+                  a <b>full flash write</b> which will erase all on-chip data
+                  and any custom firmware. Your books and settings on the SD
+                  card are not affected. This will take around 25 minutes.
                 </p>
               </Stack>
             </div>
