@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { getCrossPointFirmware, getX3Firmware } from '@/remote/firmwareFetcher';
+import { getCrossPointFirmware, getX3Firmware, getOfficialFirmware } from '@/remote/firmwareFetcher';
 import { downloadData } from '@/utils/download';
 import { wrapWithWakeLock } from '@/utils/wakelock';
 import {
@@ -123,6 +123,12 @@ export function useEspOperations() {
 
   const flashX3Firmware = async () =>
     flashRemoteFirmware(() => getX3Firmware(), 'Xteink X3');
+
+  const flashStockEnglishFirmware = async () =>
+    flashRemoteFirmware(() => getOfficialFirmware('en'), 'Xteink X3');
+
+  const flashStockChineseFirmware = async () =>
+    flashRemoteFirmware(() => getOfficialFirmware('ch'), 'Xteink X3');
 
   const flashCustomFirmware = async (getFile: () => File | undefined, deviceName: string = 'PaperS3') => {
     initializeSteps([
@@ -535,6 +541,8 @@ export function useEspOperations() {
     actions: {
       flashCrossPointFirmware: wrapWithRunning(flashCrossPointFirmware),
       flashX3Firmware: wrapWithRunning(flashX3Firmware),
+      flashStockEnglishFirmware: wrapWithRunning(flashStockEnglishFirmware),
+      flashStockChineseFirmware: wrapWithRunning(flashStockChineseFirmware),
       flashCustomFirmware: wrapWithRunning(flashCustomFirmware),
       saveFullFlash: wrapWithRunning(saveFullFlash),
       writeFullFlash: wrapWithRunning(writeFullFlash),

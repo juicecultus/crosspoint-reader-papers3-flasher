@@ -24,6 +24,9 @@ export interface DeviceConfig {
   restartHint: string;
   fetchVersions: () => Promise<{ version: string; releaseDate: string }>;
   flashFirmwareAction: 'flashCrossPointFirmware' | 'flashX3Firmware';
+  stockFirmware?: {
+    fetchVersions: () => Promise<{ en: string; ch: string }>;
+  };
 }
 
 export default function FlashPage({ config }: { config: DeviceConfig }) {
@@ -32,11 +35,16 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     version: string;
     releaseDate: string;
   } | null>(null);
+  const [stockVersions, setStockVersions] = useState<{
+    en: string;
+    ch: string;
+  } | null>(null);
   const fullFlashFileInput = useRef<FileUploadHandle>(null);
   const appPartitionFileInput = useRef<FileUploadHandle>(null);
 
   useEffect(() => {
     config.fetchVersions().then(setFirmwareVersions);
+    config.stockFirmware?.fetchVersions().then(setStockVersions);
   }, [config]);
 
   const flashRemote = actions[config.flashFirmwareAction];
@@ -187,6 +195,42 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
           )}
         </Stack>
       </Stack>
+      {config.stockFirmware && (
+        <>
+          <Separator />
+          <Stack gap={3} as="section">
+            <div>
+              <Heading size="xl">Stock firmware</Heading>
+              <Stack gap={1} color="grey" textStyle="sm">
+                <p>
+                  Restore your {config.deviceName} to the official Xteink stock
+                  firmware. This uses OTA fast flash and requires the device to
+                  already be running CrossPoint or stock firmware with the
+                  default partition table.
+                </p>
+              </Stack>
+            </div>
+            <Stack as="section">
+              <Button
+                variant="subtle"
+                onClick={actions.flashStockEnglishFirmware}
+                disabled={isRunning || !stockVersions}
+                loading={!stockVersions}
+              >
+                Flash stock English firmware ({stockVersions?.en ?? '...'})
+              </Button>
+              <Button
+                variant="subtle"
+                onClick={actions.flashStockChineseFirmware}
+                disabled={isRunning || !stockVersions}
+                loading={!stockVersions}
+              >
+                Flash stock Chinese firmware ({stockVersions?.ch ?? '...'})
+              </Button>
+            </Stack>
+          </Stack>
+        </>
+      )}
       <Separator />
       <Card.Root variant="subtle">
         <Card.Header>

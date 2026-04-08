@@ -2,7 +2,7 @@
 
 import React from 'react';
 import FlashPage, { DeviceConfig } from '@/components/FlashPage';
-import { getX3FirmwareRemoteData } from '@/remote/firmwareFetcher';
+import { getX3FirmwareRemoteData, getOfficialFirmwareVersions } from '@/remote/firmwareFetcher';
 
 const x3Config: DeviceConfig = {
   deviceName: 'Xteink X3',
@@ -16,6 +16,9 @@ const x3Config: DeviceConfig = {
     'Once you complete a write operation, you may need to restart your Xteink X3 by pressing the RST button on the device.',
   fetchVersions: () => getX3FirmwareRemoteData().then((d) => d.x3),
   flashFirmwareAction: 'flashX3Firmware',
+  stockFirmware: {
+    fetchVersions: getOfficialFirmwareVersions,
+  },
 };
 
 export default function X3Page() {
