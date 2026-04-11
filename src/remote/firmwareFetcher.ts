@@ -97,7 +97,7 @@ export async function getCrossPointFirmware() {
 
 export async function getX3FirmwareRemoteData(): Promise<X3FirmwareVersions> {
   const cache = getCache();
-  const cacheKey = 'firmware-versions.crosspoint-x3.v2';
+  const cacheKey = 'firmware-versions.crosspoint-x3.v3';
 
   const value = (await cache.get(cacheKey)) as X3FirmwareVersions | null;
   if (value) {
@@ -127,7 +127,7 @@ export async function getX3FirmwareRemoteData(): Promise<X3FirmwareVersions> {
   };
 
   await cache.set(cacheKey, data, {
-    ttl: 60 * 60, // 1 hour
+    ttl: 60 * 5, // 5 minutes
   });
 
   return data;
