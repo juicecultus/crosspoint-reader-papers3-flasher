@@ -71,7 +71,7 @@ export async function getCrossPointFirmwareRemoteData(): Promise<CrossPointFirmw
 
   const data = {
     crossPoint: {
-      version: releaseData.tag_name.replace(/^papers3-/, ''),
+      version: releaseData.tag_name,
       releaseDate: new Date(releaseData.published_at)
         .toISOString()
         .slice(0, 10),
