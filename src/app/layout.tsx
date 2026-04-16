@@ -1,5 +1,6 @@
 import React from 'react';
 import type { Metadata } from 'next';
+import { Analytics } from '@vercel/analytics/react';
 import './globals.css';
 import { Provider } from '@/components/ui/provider';
 import { Toaster } from '@/components/ui/toaster';
@@ -25,6 +26,7 @@ export default function RootLayout({
             {children}
           </Container>
           <Toaster />
+          <Analytics />
         </Provider>
       </body>
     </html>
