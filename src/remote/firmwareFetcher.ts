@@ -80,7 +80,7 @@ export async function getCrossPointFirmwareRemoteData(): Promise<CrossPointFirmw
   };
 
   await cache.set(cacheKey, data, {
-    ttl: 60 * 60, // 1 hour
+    ttl: 60 * 5, // 5 minutes
   });
 
   return data;
