@@ -97,7 +97,7 @@ export async function getCrossPointFirmware() {
 
 export async function getX3FirmwareRemoteData(): Promise<X3FirmwareVersions> {
   const cache = getCache();
-  const cacheKey = 'firmware-versions.crosspoint-x3.v3';
+  const cacheKey = 'firmware-versions.crosspoint-x3.v4';
 
   const value = (await cache.get(cacheKey)) as X3FirmwareVersions | null;
   if (value) {
@@ -108,9 +108,8 @@ export async function getX3FirmwareRemoteData(): Promise<X3FirmwareVersions> {
     'https://api.github.com/repos/juicecultus/crosspoint-reader/releases/latest',
   ).then((resp) => resp.json());
 
-  const firmwareAsset = releaseData.assets.find(
-    (asset: any) =>
-      asset.name.endsWith('.bin') && asset.content_type === 'application/octet-stream',
+  const firmwareAsset = releaseData.assets.find((asset: any) =>
+    asset.name.endsWith('firmware.bin'),
   );
   if (!firmwareAsset) {
     throw new Error('CrossPoint X3 firmware asset not found');
