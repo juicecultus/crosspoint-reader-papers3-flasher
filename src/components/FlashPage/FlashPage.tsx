@@ -16,16 +16,17 @@ import {
 import {
   LuChevronDown,
   LuChevronRight,
-  LuCircle,
   LuCircleAlert,
   LuCircleCheck,
   LuDownload,
   LuHardDrive,
   LuRotateCcw,
+  LuScanSearch,
   LuTriangleAlert,
   LuUpload,
   LuZap,
 } from 'react-icons/lu';
+import type { FirmwareInfo } from '@/utils/firmwareIdentifier';
 import FileUpload, { FileUploadHandle } from '@/components/FileUpload';
 import Steps from '@/components/Steps';
 import { useEspOperations } from '@/esp/useEspOperations';
@@ -158,7 +159,7 @@ function VersionMeta({
 }
 
 export default function FlashPage({ config }: { config: DeviceConfig }) {
-  const { actions, stepData, isRunning } = useEspOperations();
+  const { actions, debugActions, stepData, isRunning } = useEspOperations();
 
   // ─── Remote version state ──────────────────────────────────────────────
   const [firmwareVersions, setFirmwareVersions] = useState<VersionInfo | null>(
@@ -180,8 +181,32 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
   // ─── Browser feature detection ─────────────────────────────────────────
   const [serialSupported, setSerialSupported] = useState<boolean | null>(null);
 
+  // ─── Identified firmware (populated on demand) ─────────────────────────
+  const [identifiedFirmware, setIdentifiedFirmware] = useState<{
+    app0: FirmwareInfo;
+    app1: FirmwareInfo;
+    currentBoot: 'app0' | 'app1';
+  } | null>(null);
+  const [identifyError, setIdentifyError] = useState<string | null>(null);
+
+  // ─── Debug flag (NODE_ENV=development OR ?debug=1 in URL) ──────────────
+  const [debugMode, setDebugMode] = useState(false);
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      setDebugMode(true);
+      return;
+    }
+    if (
+      typeof window !== 'undefined' &&
+      new URLSearchParams(window.location.search).get('debug') === '1'
+    ) {
+      setDebugMode(true);
+    }
+  }, []);
+
   // ─── Scroll progress card into view when an operation starts ───────────
   const progressRef = useRef<HTMLDivElement | null>(null);
+  const wasRunningRef = useRef(false);
   useEffect(() => {
     if (isRunning && progressRef.current) {
       progressRef.current.scrollIntoView({
@@ -189,6 +214,13 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
         block: 'nearest',
       });
     }
+    // When a fresh operation starts, invalidate any cached identify result —
+    // the partition state may have changed once the operation completes.
+    if (isRunning && !wasRunningRef.current) {
+      setIdentifiedFirmware(null);
+      setIdentifyError(null);
+    }
+    wasRunningRef.current = isRunning;
   }, [isRunning]);
 
   useEffect(() => {
@@ -230,27 +262,104 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
       {/* ─── 1. Device card ─────────────────────────────────────────────── */}
       <Card.Root variant="subtle">
         <Card.Body>
-          <Stack gap={2}>
-            <Text textStyle="xs" color="fg.muted" textTransform="uppercase">
-              Device
-            </Text>
+          <Stack gap={3}>
             <HStack justifyContent="space-between" alignItems="flex-start">
               <Stack gap={0}>
+                <Text
+                  textStyle="xs"
+                  color="fg.muted"
+                  textTransform="uppercase"
+                  letterSpacing="wider"
+                >
+                  Device
+                </Text>
                 <Heading size="lg">{config.deviceName}</Heading>
                 <Text color="fg.muted" textStyle="sm">
                   {config.chipName}
                 </Text>
               </Stack>
-              <HStack gap={2} color="fg.muted" textStyle="sm">
-                <LuCircle />
-                <Text>Connect when prompted</Text>
-              </HStack>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setIdentifyError(null);
+                  debugActions
+                    .readAndIdentifyAllFirmware()
+                    .then((data) => setIdentifiedFirmware(data))
+                    .catch((e: Error) =>
+                      setIdentifyError(e.message || 'Identify failed'),
+                    );
+                }}
+                disabled={isRunning}
+              >
+                <LuScanSearch />
+                Identify current firmware
+              </Button>
             </HStack>
-            <Text textStyle="xs" color="fg.muted">
-              Each action below will ask you to pick the device in a browser
-              prompt. If it doesn&apos;t show up, see “Device not detected?”
-              at the bottom of this page.
-            </Text>
+
+            {identifiedFirmware && (
+              <Stack
+                gap={2}
+                borderTopWidth="1px"
+                borderColor="border"
+                pt={3}
+              >
+                <Text textStyle="xs" color="fg.muted" textTransform="uppercase" letterSpacing="wider">
+                  Currently installed
+                </Text>
+                <HStack gap={4} flexWrap="wrap">
+                  {(['app0', 'app1'] as const).map((slot) => {
+                    const info = identifiedFirmware[slot];
+                    const isActive = identifiedFirmware.currentBoot === slot;
+                    return (
+                      <Box key={slot} flex="1" minW="200px">
+                        <HStack gap={2}>
+                          <Text textStyle="sm" fontWeight="medium">
+                            {slot}
+                          </Text>
+                          {isActive && (
+                            <Box
+                              bg="green.solid"
+                              color="white"
+                              px={2}
+                              py="0.5"
+                              borderRadius="sm"
+                              fontSize="xs"
+                              fontWeight="bold"
+                            >
+                              ACTIVE
+                            </Box>
+                          )}
+                        </HStack>
+                        <Text textStyle="sm">{info.displayName}</Text>
+                        {info.version && info.version !== 'unknown' && (
+                          <Text textStyle="xs" color="fg.muted">
+                            {info.version}
+                          </Text>
+                        )}
+                      </Box>
+                    );
+                  })}
+                </HStack>
+              </Stack>
+            )}
+
+            {identifyError && (
+              <Alert.Root status="error" variant="surface" size="sm">
+                <Alert.Indicator />
+                <Alert.Description textStyle="xs">
+                  {identifyError}
+                </Alert.Description>
+              </Alert.Root>
+            )}
+
+            {!identifiedFirmware && !identifyError && (
+              <Text textStyle="xs" color="fg.muted">
+                Click <b>Identify</b> to read both app partitions and detect
+                what&apos;s currently installed. Optional — every action below
+                works without identifying first.
+              </Text>
+            )}
           </Stack>
         </Card.Body>
       </Card.Root>
@@ -338,7 +447,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
               </HStack>
             </Stack>
 
-            {process.env.NODE_ENV === 'development' && (
+            {debugMode && (
               <Button
                 variant="ghost"
                 size="sm"
