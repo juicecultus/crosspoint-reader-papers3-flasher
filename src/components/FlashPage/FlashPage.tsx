@@ -20,9 +20,11 @@ import {
   LuCircleCheck,
   LuDownload,
   LuHardDrive,
+  LuPlug,
   LuRotateCcw,
   LuScanSearch,
   LuTriangleAlert,
+  LuUnplug,
   LuUpload,
   LuZap,
 } from 'react-icons/lu';
@@ -159,7 +161,15 @@ function VersionMeta({
 }
 
 export default function FlashPage({ config }: { config: DeviceConfig }) {
-  const { actions, debugActions, stepData, isRunning } = useEspOperations();
+  // ─── Persistent device connection ──────────────────────────────────────
+  // Once the user picks a device via "Connect", the SerialPort lives in this
+  // state and every action reuses it — no more per-action chooser prompt.
+  const [serialPort, setSerialPort] = useState<SerialPort | null>(null);
+  const [connectError, setConnectError] = useState<string | null>(null);
+
+  const { actions, debugActions, stepData, isRunning } = useEspOperations({
+    serialPort,
+  });
 
   // ─── Remote version state ──────────────────────────────────────────────
   const [firmwareVersions, setFirmwareVersions] = useState<VersionInfo | null>(
@@ -229,6 +239,47 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     );
   }, []);
 
+  // Clear cached port if the user unplugs the device — otherwise we'd try to
+  // open a dead handle on the next action and silently fail.
+  useEffect(() => {
+    if (typeof navigator === 'undefined' || !('serial' in navigator)) return;
+    const handler = (event: Event) => {
+      const target = (event as unknown as { target?: SerialPort }).target;
+      if (target && target === serialPort) {
+        setSerialPort(null);
+      }
+    };
+    navigator.serial.addEventListener('disconnect', handler);
+    return () => navigator.serial.removeEventListener('disconnect', handler);
+  }, [serialPort]);
+
+  const connectDevice = async () => {
+    setConnectError(null);
+    try {
+      // Use the same Espressif filter as EspController.requestDevice() so the
+      // user only sees their flasher-eligible ports.
+      const port = await navigator.serial.requestPort({
+        filters: [{ usbVendorId: 12346, usbProductId: 4097 }],
+      });
+      setSerialPort(port);
+      setIdentifiedFirmware(null);
+      setIdentifyError(null);
+    } catch (e) {
+      // Aborted prompts throw DOMException with name 'NotFoundError' — that's
+      // just the user cancelling, not worth surfacing.
+      if ((e as DOMException).name !== 'NotFoundError') {
+        setConnectError((e as Error).message || 'Connect failed');
+      }
+    }
+  };
+
+  const disconnectDevice = () => {
+    setSerialPort(null);
+    setIdentifiedFirmware(null);
+    setIdentifyError(null);
+    setConnectError(null);
+  };
+
   useEffect(() => {
     config.fetchVersions().then(setFirmwareVersions);
     config.stockFirmware?.fetchVersions().then(setStockVersions);
@@ -263,7 +314,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
       <Card.Root variant="subtle">
         <Card.Body>
           <Stack gap={3}>
-            <HStack justifyContent="space-between" alignItems="flex-start">
+            <HStack justifyContent="space-between" alignItems="flex-start" flexWrap="wrap" gap={3}>
               <Stack gap={0}>
                 <Text
                   textStyle="xs"
@@ -274,27 +325,61 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                   Device
                 </Text>
                 <Heading size="lg">{config.deviceName}</Heading>
-                <Text color="fg.muted" textStyle="sm">
-                  {config.chipName}
-                </Text>
+                <HStack gap={2}>
+                  <Text color="fg.muted" textStyle="sm">
+                    {config.chipName}
+                  </Text>
+                  {serialPort && (
+                    <HStack gap={1} color="green.solid" textStyle="sm">
+                      <LuCircleCheck />
+                      <Text fontWeight="medium">Connected</Text>
+                    </HStack>
+                  )}
+                </HStack>
               </Stack>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setIdentifyError(null);
-                  debugActions
-                    .readAndIdentifyAllFirmware()
-                    .then((data) => setIdentifiedFirmware(data))
-                    .catch((e: Error) =>
-                      setIdentifyError(e.message || 'Identify failed'),
-                    );
-                }}
-                disabled={isRunning}
-              >
-                <LuScanSearch />
-                Identify current firmware
-              </Button>
+              <HStack gap={2}>
+                {serialPort ? (
+                  <>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setIdentifyError(null);
+                        debugActions
+                          .readAndIdentifyAllFirmware()
+                          .then((data) => setIdentifiedFirmware(data))
+                          .catch((e: Error) =>
+                            setIdentifyError(e.message || 'Identify failed'),
+                          );
+                      }}
+                      disabled={isRunning}
+                    >
+                      <LuScanSearch />
+                      Identify firmware
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={disconnectDevice}
+                      disabled={isRunning}
+                    >
+                      <LuUnplug />
+                      Disconnect
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    variant="solid"
+                    colorPalette="blue"
+                    size="sm"
+                    onClick={connectDevice}
+                    disabled={isRunning || serialSupported === false}
+                  >
+                    <LuPlug />
+                    Connect device
+                  </Button>
+                )}
+              </HStack>
             </HStack>
 
             {identifiedFirmware && (
@@ -355,10 +440,29 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
 
             {!identifiedFirmware && !identifyError && (
               <Text textStyle="xs" color="fg.muted">
-                Click <b>Identify</b> to read both app partitions and detect
-                what&apos;s currently installed. Optional — every action below
-                works without identifying first.
+                {serialPort ? (
+                  <>
+                    Click <b>Identify firmware</b> to read both app partitions
+                    and detect what&apos;s currently installed. Optional — all
+                    actions below work without identifying.
+                  </>
+                ) : (
+                  <>
+                    Click <b>Connect device</b> once and every action below
+                    reuses the same connection — no more per-action chooser
+                    prompts.
+                  </>
+                )}
               </Text>
+            )}
+
+            {connectError && (
+              <Alert.Root status="error" variant="surface" size="sm">
+                <Alert.Indicator />
+                <Alert.Description textStyle="xs">
+                  {connectError}
+                </Alert.Description>
+              </Alert.Root>
             )}
           </Stack>
         </Card.Body>

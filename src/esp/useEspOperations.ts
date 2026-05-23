@@ -107,7 +107,19 @@ function validatePartitionTable(
   );
 }
 
-export function useEspOperations() {
+interface UseEspOperationsOptions {
+  /**
+   * Optional pre-authorized SerialPort. When provided, every action reuses
+   * this port instead of prompting the user via navigator.serial.requestPort().
+   * The port is opened fresh for each operation and closed after — Web Serial
+   * permission persists, so subsequent operations skip the chooser dialog.
+   */
+  serialPort?: SerialPort | null;
+}
+
+export function useEspOperations(
+  { serialPort }: UseEspOperationsOptions = {},
+) {
   const { stepData, initializeSteps, updateStepData, runStep } =
     useStepRunner();
   const [isRunning, setIsRunning] = useState(false);
@@ -118,6 +130,13 @@ export function useEspOperations() {
       setIsRunning(true);
       return fn(...a).finally(() => setIsRunning(false));
     };
+
+  const acquireController = async (): Promise<EspController> => {
+    const port = serialPort ?? (await EspController.requestDevice());
+    const c = new EspController(port);
+    await c.connect();
+    return c;
+  };
 
   const flashRemoteFirmware = async (
     getFirmware: () => Promise<Uint8Array>,
@@ -134,9 +153,7 @@ export function useEspOperations() {
     ]);
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     const partitionInfo = await runStep('Validate partition table', async () => {
@@ -246,9 +263,7 @@ export function useEspOperations() {
     });
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     await runStep(
@@ -291,9 +306,7 @@ export function useEspOperations() {
     });
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     await runStep(
@@ -330,9 +343,7 @@ export function useEspOperations() {
     });
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     const partitionInfo = await runStep('Validate partition table', async () => {
@@ -394,9 +405,7 @@ export function useEspOperations() {
     ]);
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     const firmwareFile = await runStep(
@@ -432,9 +441,7 @@ export function useEspOperations() {
     });
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     await runStep(
@@ -459,9 +466,7 @@ export function useEspOperations() {
     ]);
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     const otaPartition = await runStep('Read otadata partition', () =>
@@ -487,9 +492,7 @@ export function useEspOperations() {
     ]);
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     const data = await runStep(`Read app partition (${partitionLabel})`, () =>
@@ -516,9 +519,7 @@ export function useEspOperations() {
     ]);
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     const [otaPartition, backupPartitionLabel] = await runStep(
@@ -567,9 +568,7 @@ export function useEspOperations() {
     });
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     await runStep(
@@ -660,9 +659,7 @@ export function useEspOperations() {
     ]);
 
     const espController = await runStep('Connect to device', async () => {
-      const c = await EspController.fromRequestedDevice();
-      await c.connect();
-      return c;
+      return acquireController();
     });
 
     const otaPartition = await runStep('Read otadata partition', () =>
