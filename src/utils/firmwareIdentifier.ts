@@ -132,32 +132,44 @@ function extractVersion(data: Uint8Array, searchLimit = 25000): string {
  * @returns FirmwareInfo object with type, version, and display name
  */
 export function identifyFirmware(firmwareData: Uint8Array): FirmwareInfo {
-  // Search in first 25KB for version
+  // Modern CrossPoint builds (Paper S3 and X3) embed a "CrossPoint version:
+  // X.Y.Z" banner that the device prints on boot. Match that first — it
+  // covers every currently-shipped release and gives us the version inline.
+  // Fall back to legacy markers for older builds that predate the banner.
   const searchLimit = 25000;
   const searchArea = firmwareData.slice(
     0,
     Math.min(firmwareData.length, searchLimit),
   );
+  const decoder = new TextDecoder('utf-8', { fatal: false });
+  const searchAreaString = decoder.decode(searchArea);
 
-  // Try to find version string
-  const version = extractVersion(searchArea);
+  const bannerMatch = searchAreaString.match(
+    /CrossPoint version:\s*(\d+\.\d+\.\d+(?:[-+][\w.]+)?)/,
+  );
+  if (bannerMatch) {
+    return {
+      type: 'crosspoint',
+      version: bannerMatch[1]!,
+      displayName: 'CrossPoint',
+    };
+  }
 
-  // Check for CrossPoint Community firmware
+  // Legacy detection for pre-banner builds.
   if (
     findString(firmwareData, 'CrossPoint-ESP32-') !== -1 ||
     findString(firmwareData, 'Starting CrossPoint version') !== -1
   ) {
     return {
       type: 'crosspoint',
-      version,
-      displayName: 'CrossPoint PaperS3',
+      version: extractVersion(searchArea),
+      displayName: 'CrossPoint',
     };
   }
 
-  // Unknown firmware
   return {
     type: 'unknown',
-    version,
+    version: extractVersion(searchArea),
     displayName: 'Custom/Unknown Firmware',
   };
 }
