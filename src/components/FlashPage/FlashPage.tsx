@@ -37,6 +37,11 @@ export interface DeviceConfig {
     fetchVersion: () => Promise<{ version: string; releaseDate: string }>;
     flashAction: 'flashStockPaperS3FullFlash';
   };
+  crossPointFullFlash?: {
+    buttonLabel: string;
+    fetchVersion: () => Promise<{ version: string; releaseDate: string }>;
+    flashAction: 'flashCrossPointPaperS3FullFlash';
+  };
 }
 
 export default function FlashPage({ config }: { config: DeviceConfig }) {
@@ -53,6 +58,10 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     version: string;
     releaseDate: string;
   } | null>(null);
+  const [crossPointFullFlashVersion, setCrossPointFullFlashVersion] = useState<{
+    version: string;
+    releaseDate: string;
+  } | null>(null);
   const fullFlashFileInput = useRef<FileUploadHandle>(null);
   const appPartitionFileInput = useRef<FileUploadHandle>(null);
 
@@ -60,6 +69,9 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     config.fetchVersions().then(setFirmwareVersions);
     config.stockFirmware?.fetchVersions().then(setStockVersions);
     config.dynamicStockFullFlash?.fetchVersion().then(setDynamicStockVersion);
+    config.crossPointFullFlash
+      ?.fetchVersion()
+      .then(setCrossPointFullFlashVersion);
   }, [config]);
 
   const flashRemote = actions[config.flashFirmwareAction];
@@ -241,6 +253,39 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                 loading={!stockVersions}
               >
                 Flash stock Chinese firmware ({stockVersions?.ch ?? '...'})
+              </Button>
+            </Stack>
+          </Stack>
+        </>
+      )}
+      {config.crossPointFullFlash && (
+        <>
+          <Separator />
+          <Stack gap={3} as="section">
+            <div>
+              <Heading size="xl">Full install (recovery)</Heading>
+              <Stack gap={1} color="grey" textStyle="sm">
+                <p>
+                  Use this if the OTA fast-flash above can't run (e.g. you are
+                  currently on stock M5Stack firmware, bmorcelli's Launcher, or
+                  another non-CrossPoint image). It writes a complete CrossPoint
+                  image from address 0 — bootloader, partition table, and
+                  CrossPoint app — restoring the dual-OTA layout that the
+                  fast-flash flow needs. Takes around 25 minutes. SD card
+                  contents are unaffected.
+                </p>
+              </Stack>
+            </div>
+            <Stack as="section">
+              <Button
+                variant="subtle"
+                onClick={actions[config.crossPointFullFlash.flashAction]}
+                disabled={isRunning || !crossPointFullFlashVersion}
+                loading={!crossPointFullFlashVersion}
+              >
+                {config.crossPointFullFlash.buttonLabel} (
+                {crossPointFullFlashVersion?.version ?? '...'}) —{' '}
+                {crossPointFullFlashVersion?.releaseDate ?? '...'} — full flash
               </Button>
             </Stack>
           </Stack>

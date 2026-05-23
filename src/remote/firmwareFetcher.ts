@@ -86,6 +86,49 @@ export async function getCrossPointFirmwareRemoteData(): Promise<CrossPointFirmw
   return data;
 }
 
+interface CrossPointPaperS3FullFlashParts {
+  bootloader: Uint8Array;
+  partitions: Uint8Array;
+  firmware: Uint8Array;
+}
+
+// Fetches all three assets of the latest crosspoint-reader-papers3 release
+// (bootloader / partitions / firmware) so the client can stitch them into a
+// flash-from-0 image. This is what users on a single-app factory layout (stock
+// M5Stack or Launcher) need to migrate to CrossPoint — the OTA fast-flash path
+// can't work from that starting state because there's no second app slot.
+// Server-side concatenation would balloon the response with 14 MB of 0xff
+// padding, so the client does the padding instead.
+export async function getCrossPointPaperS3FullFlashParts(): Promise<CrossPointPaperS3FullFlashParts> {
+  const release = await fetch(
+    'https://api.github.com/repos/juicecultus/crosspoint-reader-papers3/releases/latest',
+  ).then((r) => r.json());
+
+  const findAsset = (suffix: string) => {
+    const asset = release.assets.find((a: { name: string }) =>
+      a.name.endsWith(suffix),
+    );
+    if (!asset) {
+      throw new Error(
+        `CrossPoint Paper S3 release is missing required asset: ${suffix}`,
+      );
+    }
+    return asset.browser_download_url as string;
+  };
+
+  const [bootloader, partitions, firmware] = await Promise.all([
+    fetch(findAsset('bootloader.bin')).then((r) => r.arrayBuffer()),
+    fetch(findAsset('partitions.bin')).then((r) => r.arrayBuffer()),
+    fetch(findAsset('firmware.bin')).then((r) => r.arrayBuffer()),
+  ]);
+
+  return {
+    bootloader: new Uint8Array(bootloader),
+    partitions: new Uint8Array(partitions),
+    firmware: new Uint8Array(firmware),
+  };
+}
+
 export async function getCrossPointFirmware() {
   const releaseData = await getCrossPointFirmwareRemoteData().then(
     (data) => data.crossPoint,

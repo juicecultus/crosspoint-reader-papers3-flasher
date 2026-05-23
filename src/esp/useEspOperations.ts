@@ -6,6 +6,7 @@ import {
   getX3Firmware,
   getOfficialFirmware,
   getPaperS3StockFirmware,
+  getCrossPointPaperS3FullFlashParts,
 } from '@/remote/firmwareFetcher';
 import { downloadData } from '@/utils/download';
 import { wrapWithWakeLock } from '@/utils/wakelock';
@@ -202,6 +203,67 @@ export function useEspOperations() {
 
   const flashStockChineseFirmware = async () =>
     flashRemoteFirmware(() => getOfficialFirmware('ch'), 'Xteink X3');
+
+  const flashCrossPointPaperS3FullFlash = async () => {
+    initializeSteps([
+      'Download firmware',
+      'Connect to device',
+      'Write flash',
+      'Reset device',
+    ]);
+
+    const firmwareFile = await runStep('Download firmware', async () => {
+      const { bootloader, partitions, firmware } =
+        await getCrossPointPaperS3FullFlashParts();
+
+      // ESP-IDF layout for CrossPoint Paper S3 (matches partitions.bin):
+      //   0x0000   bootloader
+      //   0x8000   partition table
+      //   0xe000   otadata  (left as 0xff so bootloader picks app0 on first boot)
+      //   0x10000  app0 (firmware.bin)
+      //   rest     0xff fill
+      const FLASH_SIZE = 0x1000000;
+      const PARTITION_OFFSET = 0x8000;
+      const APP0_OFFSET = 0x10000;
+
+      if (bootloader.length > PARTITION_OFFSET) {
+        throw new Error('bootloader.bin overflows the partition-table offset');
+      }
+      if (partitions.length > 0x1000) {
+        throw new Error('partitions.bin is unexpectedly large');
+      }
+      if (APP0_OFFSET + firmware.length > FLASH_SIZE) {
+        throw new Error(
+          `firmware.bin (${firmware.length} bytes) overflows 16 MB flash`,
+        );
+      }
+
+      const image = new Uint8Array(FLASH_SIZE).fill(0xff);
+      image.set(bootloader, 0);
+      image.set(partitions, PARTITION_OFFSET);
+      image.set(firmware, APP0_OFFSET);
+      return image;
+    });
+
+    const espController = await runStep('Connect to device', async () => {
+      const c = await EspController.fromRequestedDevice();
+      await c.connect();
+      return c;
+    });
+
+    await runStep(
+      'Write flash',
+      wrapWithWakeLock(() =>
+        espController.writeFullFlash(firmwareFile, (_, p, t) =>
+          updateStepData('Write flash', {
+            progress: { current: p, total: t },
+          }),
+        ),
+      ),
+    );
+
+    await runStep('Reset device', () => espController.disconnect());
+  };
 
   const flashStockPaperS3FullFlash = async () => {
     initializeSteps([
@@ -687,6 +749,9 @@ export function useEspOperations() {
       flashStockEnglishFirmware: wrapWithRunning(flashStockEnglishFirmware),
       flashStockChineseFirmware: wrapWithRunning(flashStockChineseFirmware),
       flashStockPaperS3FullFlash: wrapWithRunning(flashStockPaperS3FullFlash),
+      flashCrossPointPaperS3FullFlash: wrapWithRunning(
+        flashCrossPointPaperS3FullFlash,
+      ),
       flashStockFullFlash: wrapWithRunning(flashStockFullFlash),
       flashCustomFirmware: wrapWithRunning(flashCustomFirmware),
       saveFullFlash: wrapWithRunning(saveFullFlash),

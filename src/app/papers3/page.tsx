@@ -20,6 +20,12 @@ const paperS3Config: DeviceConfig = {
   fetchVersions: () =>
     getCrossPointFirmwareRemoteData().then((d) => d.crossPoint),
   flashFirmwareAction: 'flashCrossPointFirmware',
+  crossPointFullFlash: {
+    buttonLabel: 'Install CrossPoint PaperS3',
+    fetchVersion: () =>
+      getCrossPointFirmwareRemoteData().then((d) => d.crossPoint),
+    flashAction: 'flashCrossPointPaperS3FullFlash',
+  },
   dynamicStockFullFlash: {
     buttonLabel: 'Flash stock M5Stack PaperS3 firmware',
     sourceNote:
