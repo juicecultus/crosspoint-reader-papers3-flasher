@@ -46,11 +46,14 @@ interface AppPartitionInfo {
   app1Size: number;
 }
 
-function looksLikeBmorcelliLauncher(
+function looksLikeSingleAppFactoryLayout(
   partitionTable: { type: string; offset: number; size: number }[],
 ): boolean {
-  // bmorcelli/Launcher uses a single-app layout with a phy_init partition and
-  // either an `app-factory` or `app-test` slot in place of the OTA pair.
+  // Single-app `factory` (or `test`) layout with a phy_init partition and no
+  // OTA pair. This matches the stock M5Stack PaperS3 factory firmware, the
+  // bmorcelli/Launcher partition table, and any other firmware that ships
+  // without OTA slots — we can't reliably distinguish them by partition table
+  // alone (the table has the same shape regardless of which app is installed).
   const hasPhyInit = partitionTable.some((p) => p.type === 'data-phy');
   const hasSingleAppSlot = partitionTable.some(
     (p) => p.type === 'app-factory' || p.type === 'app-test',
@@ -86,11 +89,11 @@ function validatePartitionTable(
     }
   }
 
-  if (deviceName === 'PaperS3' && looksLikeBmorcelliLauncher(partitionTable)) {
+  if (deviceName === 'PaperS3' && looksLikeSingleAppFactoryLayout(partitionTable)) {
     throw new Error(
-      "This device looks like it has bmorcelli's Launcher installed, which replaces the partition table with a single-app layout. " +
-        'The CrossPoint OTA fast-flash flow needs the original dual-app OTA layout. ' +
-        'To recover, use "Full Flash → Write flash" with a complete CrossPoint flash.bin (or the stock Xteink full image) to restore the OTA layout, then return here for normal updates.',
+      'This device is on a single-app factory partition layout (stock M5Stack PaperS3 firmware, bmorcelli\'s Launcher, or similar). ' +
+        'The CrossPoint OTA fast-flash flow needs the dual-app OTA layout, which CrossPoint installs but stock images do not provide. ' +
+        'To switch to CrossPoint from a stock/Launcher install, you need a full-flash CrossPoint image — please follow the install instructions linked from the EinkHub Paper S3 page or open an issue if you\'re stuck.',
     );
   }
 
