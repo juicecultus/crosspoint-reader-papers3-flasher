@@ -41,8 +41,24 @@ interface AppPartitionInfo {
   app1Size: number;
 }
 
+function looksLikeBmorcelliLauncher(
+  partitionTable: { type: string; offset: number; size: number }[],
+): boolean {
+  // bmorcelli/Launcher uses a single-app layout with a phy_init partition and
+  // either an `app-factory` or `app-test` slot in place of the OTA pair.
+  const hasPhyInit = partitionTable.some((p) => p.type === 'data-phy');
+  const hasSingleAppSlot = partitionTable.some(
+    (p) => p.type === 'app-factory' || p.type === 'app-test',
+  );
+  const hasOtaPair =
+    partitionTable.some((p) => p.type === 'app-ota_0') &&
+    partitionTable.some((p) => p.type === 'app-ota_1');
+  return hasPhyInit && hasSingleAppSlot && !hasOtaPair;
+}
+
 function validatePartitionTable(
   partitionTable: { type: string; offset: number; size: number }[],
+  deviceName?: string,
 ): AppPartitionInfo {
   for (const expected of expectedPartitionTables) {
     if (
@@ -63,6 +79,14 @@ function validatePartitionTable(
         app1Size: app1.size,
       };
     }
+  }
+
+  if (deviceName === 'PaperS3' && looksLikeBmorcelliLauncher(partitionTable)) {
+    throw new Error(
+      "This device looks like it has bmorcelli's Launcher installed, which replaces the partition table with a single-app layout. " +
+        'The CrossPoint OTA fast-flash flow needs the original dual-app OTA layout. ' +
+        'To recover, use "Full Flash → Write flash" with a complete CrossPoint flash.bin (or the stock Xteink full image) to restore the OTA layout, then return here for normal updates.',
+    );
   }
 
   throw new Error(
@@ -108,7 +132,7 @@ export function useEspOperations() {
 
     const partitionInfo = await runStep('Validate partition table', async () => {
       const partitionTable = await espController.readPartitionTable();
-      return validatePartitionTable(partitionTable);
+      return validatePartitionTable(partitionTable, deviceName);
     });
 
     const firmwareFile = await runStep('Download firmware', getFirmware);
@@ -198,7 +222,7 @@ export function useEspOperations() {
 
     const partitionInfo = await runStep('Validate partition table', async () => {
       const partitionTable = await espController.readPartitionTable();
-      return validatePartitionTable(partitionTable);
+      return validatePartitionTable(partitionTable, deviceName);
     });
 
     const [otaPartition, backupPartitionLabel] = await runStep(
