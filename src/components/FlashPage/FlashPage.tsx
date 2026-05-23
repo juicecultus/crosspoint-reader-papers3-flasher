@@ -6,17 +6,19 @@ import {
   Box,
   Button,
   Card,
-  Flex,
+  CloseButton,
+  Dialog,
   Heading,
   HStack,
+  Portal,
   Separator,
+  Spinner,
   Stack,
   Text,
 } from '@chakra-ui/react';
 import {
   LuChevronDown,
   LuChevronRight,
-  LuCircleAlert,
   LuCircleCheck,
   LuDownload,
   LuHardDrive,
@@ -214,19 +216,18 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     }
   }, []);
 
-  // ─── Scroll progress card into view when an operation starts ───────────
-  const progressRef = useRef<HTMLDivElement | null>(null);
+  // ─── Progress modal ────────────────────────────────────────────────────
+  // The modal opens automatically when an operation starts and stays open
+  // (locked, no click-outside dismissal) until the operation finishes. After
+  // completion the user reviews the result and closes manually — that way
+  // critical 'do not disconnect' state is impossible to miss.
+  const [progressOpen, setProgressOpen] = useState(false);
   const wasRunningRef = useRef(false);
   useEffect(() => {
-    if (isRunning && progressRef.current) {
-      progressRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'nearest',
-      });
-    }
-    // When a fresh operation starts, invalidate any cached identify result —
-    // the partition state may have changed once the operation completes.
+    // Auto-open when a new operation starts.
     if (isRunning && !wasRunningRef.current) {
+      setProgressOpen(true);
+      // Invalidate any cached identify result — partition state may change.
       setIdentifiedFirmware(null);
       setIdentifyError(null);
     }
@@ -705,44 +706,105 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
         </ActionCard>
       )}
 
-      {/* ─── 5. Progress card (scrolls into view on start) ──────────────── */}
-      <Box ref={progressRef}>
-      <Card.Root variant="subtle">
-        <Card.Body>
-          <Stack gap={3}>
-            <HStack justifyContent="space-between" alignItems="center">
-              <Heading size="md">Progress</Heading>
-              {isRunning ? (
-                <HStack gap={1} color="blue.solid" textStyle="sm">
-                  <LuCircleAlert />
-                  <Text>Running — do not disconnect</Text>
+      {/* ─── 5. Progress modal (auto-opens on operation start) ──────────── */}
+      <Dialog.Root
+        open={progressOpen}
+        onOpenChange={(details) => {
+          // Lock the modal while running — accidental dismissal mid-flash
+          // would still leave the operation running but hide all feedback.
+          if (isRunning) return;
+          setProgressOpen(details.open);
+        }}
+        size="lg"
+        modal
+        closeOnInteractOutside={!isRunning}
+        closeOnEscape={!isRunning}
+        placement="center"
+        scrollBehavior="inside"
+      >
+        <Portal>
+          <Dialog.Backdrop />
+          <Dialog.Positioner>
+            <Dialog.Content>
+              <Dialog.Header>
+                <HStack gap={2} alignItems="center">
+                  {isRunning ? (
+                    <>
+                      <Spinner size="sm" color="blue.solid" />
+                      <Dialog.Title>Running — do not disconnect</Dialog.Title>
+                    </>
+                  ) : (
+                    <>
+                      <Box color="green.solid" display="inline-flex">
+                        <LuCircleCheck />
+                      </Box>
+                      <Dialog.Title>Operation complete</Dialog.Title>
+                    </>
+                  )}
                 </HStack>
-              ) : stepData.length > 0 ? (
-                <HStack gap={1} color="green.solid" textStyle="sm">
-                  <LuCircleCheck />
-                  <Text>Last run complete</Text>
-                </HStack>
-              ) : null}
-            </HStack>
-            {stepData.length > 0 ? (
-              <Steps steps={stepData} />
-            ) : (
-              <Text color="fg.muted" textStyle="sm">
-                Progress will appear here once you start an operation.
-              </Text>
-            )}
-            {!isRunning && stepData.length > 0 && (
-              <Alert.Root status="info" variant="surface">
-                <Alert.Indicator />
-                <Alert.Description textStyle="sm">
-                  {config.restartHint}
-                </Alert.Description>
-              </Alert.Root>
-            )}
-          </Stack>
-        </Card.Body>
-      </Card.Root>
-      </Box>
+                {!isRunning && (
+                  <Dialog.CloseTrigger asChild>
+                    <CloseButton size="sm" />
+                  </Dialog.CloseTrigger>
+                )}
+              </Dialog.Header>
+              <Dialog.Body>
+                <Stack gap={4}>
+                  {stepData.length > 0 ? (
+                    <Steps steps={stepData} />
+                  ) : (
+                    <Text color="fg.muted" textStyle="sm">
+                      Starting…
+                    </Text>
+                  )}
+                  {isRunning && (
+                    <Alert.Root status="warning" variant="surface">
+                      <Alert.Indicator />
+                      <Alert.Description textStyle="sm">
+                        Do not unplug your device or close this tab until the
+                        operation finishes.
+                      </Alert.Description>
+                    </Alert.Root>
+                  )}
+                  {!isRunning && stepData.length > 0 && (
+                    <Alert.Root status="info" variant="surface">
+                      <Alert.Indicator />
+                      <Alert.Description textStyle="sm">
+                        {config.restartHint}
+                      </Alert.Description>
+                    </Alert.Root>
+                  )}
+                </Stack>
+              </Dialog.Body>
+              {!isRunning && (
+                <Dialog.Footer>
+                  <Button
+                    variant="solid"
+                    colorPalette="blue"
+                    onClick={() => setProgressOpen(false)}
+                  >
+                    Done
+                  </Button>
+                </Dialog.Footer>
+              )}
+            </Dialog.Content>
+          </Dialog.Positioner>
+        </Portal>
+      </Dialog.Root>
+
+      {/* Re-open last run (only after a completed run, when dialog closed) */}
+      {!progressOpen && stepData.length > 0 && !isRunning && (
+        <HStack justifyContent="center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setProgressOpen(true)}
+          >
+            <LuCircleCheck />
+            View last run details
+          </Button>
+        </HStack>
+      )}
 
       {/* ─── 6. Help & safety (collapsed) ───────────────────────────────── */}
       <Card.Root variant="outline" borderStyle="dashed">
