@@ -200,8 +200,50 @@ export function useEspOperations() {
   const flashStockChineseFirmware = async () =>
     flashRemoteFirmware(() => getOfficialFirmware('ch'), 'Xteink X3');
 
-  const flashStockPaperS3Firmware = async () =>
-    flashRemoteFirmware(() => getPaperS3StockFirmware(), 'PaperS3');
+  const flashStockPaperS3FullFlash = async () => {
+    initializeSteps([
+      'Download firmware',
+      'Connect to device',
+      'Write flash',
+      'Reset device',
+    ]);
+
+    const firmwareFile = await runStep('Download firmware', async () => {
+      const raw = await getPaperS3StockFirmware();
+      // M5Burner ships a ~1.4 MB flash-from-0 bundle. Pad to 16 MB with 0xff
+      // so writeFullFlash's exact-size contract is satisfied; trailing 0xff
+      // matches erased flash and compresses to almost nothing on the wire to
+      // the device.
+      const FLASH_SIZE = 0x1000000;
+      if (raw.length > FLASH_SIZE) {
+        throw new Error(
+          `Stock firmware (${raw.length} bytes) is larger than the 16 MB flash size`,
+        );
+      }
+      const padded = new Uint8Array(FLASH_SIZE).fill(0xff);
+      padded.set(raw, 0);
+      return padded;
+    });
+
+    const espController = await runStep('Connect to device', async () => {
+      const c = await EspController.fromRequestedDevice();
+      await c.connect();
+      return c;
+    });
+
+    await runStep(
+      'Write flash',
+      wrapWithWakeLock(() =>
+        espController.writeFullFlash(firmwareFile, (_, p, t) =>
+          updateStepData('Write flash', {
+            progress: { current: p, total: t },
+          }),
+        ),
+      ),
+    );
+
+    await runStep('Reset device', () => espController.disconnect());
+  };
 
   const flashCustomFirmware = async (getFile: () => File | undefined, deviceName: string = 'PaperS3') => {
     initializeSteps([
@@ -641,7 +683,7 @@ export function useEspOperations() {
       flashX3Firmware: wrapWithRunning(flashX3Firmware),
       flashStockEnglishFirmware: wrapWithRunning(flashStockEnglishFirmware),
       flashStockChineseFirmware: wrapWithRunning(flashStockChineseFirmware),
-      flashStockPaperS3Firmware: wrapWithRunning(flashStockPaperS3Firmware),
+      flashStockPaperS3FullFlash: wrapWithRunning(flashStockPaperS3FullFlash),
       flashStockFullFlash: wrapWithRunning(flashStockFullFlash),
       flashCustomFirmware: wrapWithRunning(flashCustomFirmware),
       saveFullFlash: wrapWithRunning(saveFullFlash),

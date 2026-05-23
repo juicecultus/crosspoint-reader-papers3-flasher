@@ -12,7 +12,7 @@ const paperS3Config: DeviceConfig = {
   chipName: 'ESP32-S3',
   firmwareLabel: 'CrossPoint PaperS3',
   factoryNote:
-    'Use Save full flash to back up your device before flashing CrossPoint PaperS3. The Stock firmware section below can also restore the official M5Stack factory image via OTA fast flash if the original partition layout is still intact.',
+    "Use Save full flash to back up your device before flashing CrossPoint PaperS3. If you ever need to return to factory, the Stock firmware recovery section below will fully restore the original M5Stack image — even if you've previously installed a custom partition layout (e.g. bmorcelli's Launcher).",
   bootModeHint:
     'hold the BOOT button (G0) while pressing the RST button, then release both',
   restartHint:
@@ -20,7 +20,7 @@ const paperS3Config: DeviceConfig = {
   fetchVersions: () =>
     getCrossPointFirmwareRemoteData().then((d) => d.crossPoint),
   flashFirmwareAction: 'flashCrossPointFirmware',
-  stockOtaFirmware: {
+  dynamicStockFullFlash: {
     buttonLabel: 'Flash stock M5Stack PaperS3 firmware',
     sourceNote:
       'Mirrored from the official M5Burner catalog (PaperS3 Factory Test).',
@@ -29,7 +29,7 @@ const paperS3Config: DeviceConfig = {
         version: d.version,
         releaseDate: d.releaseDate,
       })),
-    flashAction: 'flashStockPaperS3Firmware',
+    flashAction: 'flashStockPaperS3FullFlash',
   },
 };
 

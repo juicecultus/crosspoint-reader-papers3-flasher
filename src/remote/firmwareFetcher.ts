@@ -207,6 +207,9 @@ export async function getPaperS3StockFirmwareRemoteData(): Promise<PaperS3StockF
 }
 
 export async function getPaperS3StockFirmware() {
+  // Returns the raw M5Burner flash-from-0 bundle (~1.4 MB, bootloader +
+  // partition table + factory app). The client pads this to the 16 MB
+  // writeFullFlash contract — avoids shipping 14 MB of 0xff over the wire.
   const { downloadUrl } = await getPaperS3StockFirmwareRemoteData();
   const response = await fetch(downloadUrl);
   return new Uint8Array(await response.arrayBuffer());

@@ -27,18 +27,15 @@ export interface DeviceConfig {
   stockFirmware?: {
     fetchVersions: () => Promise<{ en: string; ch: string }>;
   };
-  stockOtaFirmware?: {
-    buttonLabel: string;
-    sourceNote?: React.ReactNode;
-    fetchVersion: () => Promise<{ version: string; releaseDate: string }>;
-    flashAction:
-      | 'flashStockPaperS3Firmware'
-      | 'flashStockEnglishFirmware'
-      | 'flashStockChineseFirmware';
-  };
   stockFullFlash?: {
     version: string;
     firmwareUrl: string;
+  };
+  dynamicStockFullFlash?: {
+    buttonLabel: string;
+    sourceNote?: React.ReactNode;
+    fetchVersion: () => Promise<{ version: string; releaseDate: string }>;
+    flashAction: 'flashStockPaperS3FullFlash';
   };
 }
 
@@ -52,7 +49,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     en: string;
     ch: string;
   } | null>(null);
-  const [stockOtaVersion, setStockOtaVersion] = useState<{
+  const [dynamicStockVersion, setDynamicStockVersion] = useState<{
     version: string;
     releaseDate: string;
   } | null>(null);
@@ -62,7 +59,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
   useEffect(() => {
     config.fetchVersions().then(setFirmwareVersions);
     config.stockFirmware?.fetchVersions().then(setStockVersions);
-    config.stockOtaFirmware?.fetchVersion().then(setStockOtaVersion);
+    config.dynamicStockFullFlash?.fetchVersion().then(setDynamicStockVersion);
   }, [config]);
 
   const flashRemote = actions[config.flashFirmwareAction];
@@ -249,34 +246,58 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
           </Stack>
         </>
       )}
-      {config.stockOtaFirmware && (
+      {config.dynamicStockFullFlash && (
         <>
           <Separator />
           <Stack gap={3} as="section">
             <div>
-              <Heading size="xl">Stock firmware</Heading>
+              <Heading size="xl">Stock firmware recovery</Heading>
               <Stack gap={1} color="grey" textStyle="sm">
                 <p>
                   Restore your {config.deviceName} to the official M5Stack
-                  factory firmware via OTA fast flash. This requires the device
-                  to already have the original dual-app OTA partition layout
-                  (i.e. currently running CrossPoint or factory firmware).
+                  factory firmware. This performs a <b>full flash write</b>{' '}
+                  starting at address 0, which restores the original
+                  bootloader, partition table, and factory app — so it works
+                  even if your device's partition layout has been replaced
+                  (e.g. by bmorcelli's Launcher) or otherwise wiped. This will
+                  erase all on-chip data; SD card contents are unaffected.
+                  Takes around 25 minutes.
                 </p>
-                {config.stockOtaFirmware.sourceNote && (
-                  <p>{config.stockOtaFirmware.sourceNote}</p>
+                {config.dynamicStockFullFlash.sourceNote && (
+                  <p>{config.dynamicStockFullFlash.sourceNote}</p>
                 )}
               </Stack>
             </div>
+            <Alert.Root status="warning">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Description>
+                  <Stack gap={1} textStyle="sm">
+                    <p>
+                      This firmware is the intellectual property of{' '}
+                      <b>M5Stack</b> and is provided here solely for emergency
+                      recovery purposes — mirrored from the official M5Burner
+                      catalog, which only ships native builds for x64
+                      platforms. By proceeding, you acknowledge that this
+                      software is copyrighted by M5Stack and that you use it
+                      entirely at your own risk. EinkHub is not affiliated
+                      with M5Stack and provides no warranty or support for
+                      this firmware.
+                    </p>
+                  </Stack>
+                </Alert.Description>
+              </Alert.Content>
+            </Alert.Root>
             <Stack as="section">
               <Button
                 variant="subtle"
-                onClick={actions[config.stockOtaFirmware.flashAction]}
-                disabled={isRunning || !stockOtaVersion}
-                loading={!stockOtaVersion}
+                onClick={actions[config.dynamicStockFullFlash.flashAction]}
+                disabled={isRunning || !dynamicStockVersion}
+                loading={!dynamicStockVersion}
               >
-                {config.stockOtaFirmware.buttonLabel} (
-                {stockOtaVersion?.version ?? '...'}) -{' '}
-                {stockOtaVersion?.releaseDate ?? '...'}
+                {config.dynamicStockFullFlash.buttonLabel} (
+                {dynamicStockVersion?.version ?? '...'}) —{' '}
+                {dynamicStockVersion?.releaseDate ?? '...'} — full flash
               </Button>
             </Stack>
           </Stack>
