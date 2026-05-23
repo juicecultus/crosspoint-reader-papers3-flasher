@@ -27,6 +27,15 @@ export interface DeviceConfig {
   stockFirmware?: {
     fetchVersions: () => Promise<{ en: string; ch: string }>;
   };
+  stockOtaFirmware?: {
+    buttonLabel: string;
+    sourceNote?: React.ReactNode;
+    fetchVersion: () => Promise<{ version: string; releaseDate: string }>;
+    flashAction:
+      | 'flashStockPaperS3Firmware'
+      | 'flashStockEnglishFirmware'
+      | 'flashStockChineseFirmware';
+  };
   stockFullFlash?: {
     version: string;
     firmwareUrl: string;
@@ -43,12 +52,17 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     en: string;
     ch: string;
   } | null>(null);
+  const [stockOtaVersion, setStockOtaVersion] = useState<{
+    version: string;
+    releaseDate: string;
+  } | null>(null);
   const fullFlashFileInput = useRef<FileUploadHandle>(null);
   const appPartitionFileInput = useRef<FileUploadHandle>(null);
 
   useEffect(() => {
     config.fetchVersions().then(setFirmwareVersions);
     config.stockFirmware?.fetchVersions().then(setStockVersions);
+    config.stockOtaFirmware?.fetchVersion().then(setStockOtaVersion);
   }, [config]);
 
   const flashRemote = actions[config.flashFirmwareAction];
@@ -230,6 +244,39 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                 loading={!stockVersions}
               >
                 Flash stock Chinese firmware ({stockVersions?.ch ?? '...'})
+              </Button>
+            </Stack>
+          </Stack>
+        </>
+      )}
+      {config.stockOtaFirmware && (
+        <>
+          <Separator />
+          <Stack gap={3} as="section">
+            <div>
+              <Heading size="xl">Stock firmware</Heading>
+              <Stack gap={1} color="grey" textStyle="sm">
+                <p>
+                  Restore your {config.deviceName} to the official M5Stack
+                  factory firmware via OTA fast flash. This requires the device
+                  to already have the original dual-app OTA partition layout
+                  (i.e. currently running CrossPoint or factory firmware).
+                </p>
+                {config.stockOtaFirmware.sourceNote && (
+                  <p>{config.stockOtaFirmware.sourceNote}</p>
+                )}
+              </Stack>
+            </div>
+            <Stack as="section">
+              <Button
+                variant="subtle"
+                onClick={actions[config.stockOtaFirmware.flashAction]}
+                disabled={isRunning || !stockOtaVersion}
+                loading={!stockOtaVersion}
+              >
+                {config.stockOtaFirmware.buttonLabel} (
+                {stockOtaVersion?.version ?? '...'}) -{' '}
+                {stockOtaVersion?.releaseDate ?? '...'}
               </Button>
             </Stack>
           </Stack>

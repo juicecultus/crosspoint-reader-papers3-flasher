@@ -141,6 +141,77 @@ export async function getX3Firmware() {
   return new Uint8Array(await response.arrayBuffer());
 }
 
+// M5Stack publishes the Paper S3 stock/factory firmware exclusively via
+// M5Burner (only x64 Mac/Windows builds available), making it unreachable for
+// many users. The M5Burner desktop app fetches its catalog from this public
+// API, which we reuse here to mirror the "PaperS3 Factory Test" image.
+const M5BURNER_API = 'http://m5burner-api.m5stack.com/api/firmware';
+const M5BURNER_CDN = 'https://m5burner-cdn.m5stack.com/firmware';
+const PAPERS3_FACTORY_FID = 'bbb47b2c310a17a21815fded729482e1';
+
+interface M5BurnerFirmwareVersion {
+  version: string;
+  published_at: string;
+  file: string;
+  published: boolean;
+  change_log?: string;
+}
+
+interface PaperS3StockFirmwareData {
+  version: string;
+  releaseDate: string;
+  downloadUrl: string;
+}
+
+export async function getPaperS3StockFirmwareRemoteData(): Promise<PaperS3StockFirmwareData> {
+  const cache = getCache();
+  const cacheKey = 'firmware-versions.papers3-stock.v1';
+
+  const value = (await cache.get(cacheKey)) as PaperS3StockFirmwareData | null;
+  if (value) {
+    return value;
+  }
+
+  const catalog = (await fetch(M5BURNER_API).then((r) => r.json())) as Array<{
+    fid: string;
+    name: string;
+    versions: M5BurnerFirmwareVersion[];
+  }>;
+
+  const entry = catalog.find((fw) => fw.fid === PAPERS3_FACTORY_FID);
+  if (!entry) {
+    throw new Error(
+      'Paper S3 Factory Test firmware entry not found in M5Burner catalog',
+    );
+  }
+
+  const publishedVersions = entry.versions.filter((v) => v.published);
+  if (publishedVersions.length === 0) {
+    throw new Error('No published Paper S3 Factory Test firmware versions available');
+  }
+
+  // Catalog lists versions in chronological order; last published entry is latest.
+  const latest = publishedVersions[publishedVersions.length - 1]!;
+
+  const data: PaperS3StockFirmwareData = {
+    version: latest.version.trim(),
+    releaseDate: latest.published_at,
+    downloadUrl: `${M5BURNER_CDN}/${latest.file}`,
+  };
+
+  await cache.set(cacheKey, data, {
+    ttl: 60 * 60, // 1 hour
+  });
+
+  return data;
+}
+
+export async function getPaperS3StockFirmware() {
+  const { downloadUrl } = await getPaperS3StockFirmwareRemoteData();
+  const response = await fetch(downloadUrl);
+  return new Uint8Array(await response.arrayBuffer());
+}
+
 export async function getOfficialFirmwareRemoteData(): Promise<OfficialFirmwareVersions> {
   const cache = getCache();
   const cacheKey = 'firmware-versions.official.v1';

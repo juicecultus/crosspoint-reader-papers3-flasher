@@ -2,14 +2,17 @@
 
 import React from 'react';
 import FlashPage, { DeviceConfig } from '@/components/FlashPage';
-import { getCrossPointFirmwareRemoteData } from '@/remote/firmwareFetcher';
+import {
+  getCrossPointFirmwareRemoteData,
+  getPaperS3StockFirmwareRemoteData,
+} from '@/remote/firmwareFetcher';
 
 const paperS3Config: DeviceConfig = {
   deviceName: 'M5Stack Paper S3',
   chipName: 'ESP32-S3',
   firmwareLabel: 'CrossPoint PaperS3',
   factoryNote:
-    'The M5Stack Paper S3 does not ship with downloadable factory firmware. If you want to preserve your stock firmware, use Save full flash to create a backup before flashing CrossPoint PaperS3. There is no other way to restore the original M5Stack firmware.',
+    'Use Save full flash to back up your device before flashing CrossPoint PaperS3. The Stock firmware section below can also restore the official M5Stack factory image via OTA fast flash if the original partition layout is still intact.',
   bootModeHint:
     'hold the BOOT button (G0) while pressing the RST button, then release both',
   restartHint:
@@ -17,6 +20,17 @@ const paperS3Config: DeviceConfig = {
   fetchVersions: () =>
     getCrossPointFirmwareRemoteData().then((d) => d.crossPoint),
   flashFirmwareAction: 'flashCrossPointFirmware',
+  stockOtaFirmware: {
+    buttonLabel: 'Flash stock M5Stack PaperS3 firmware',
+    sourceNote:
+      'Mirrored from the official M5Burner catalog (PaperS3 Factory Test).',
+    fetchVersion: () =>
+      getPaperS3StockFirmwareRemoteData().then((d) => ({
+        version: d.version,
+        releaseDate: d.releaseDate,
+      })),
+    flashAction: 'flashStockPaperS3Firmware',
+  },
 };
 
 export default function PaperS3Page() {
