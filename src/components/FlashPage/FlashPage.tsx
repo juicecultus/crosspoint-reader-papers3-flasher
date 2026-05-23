@@ -14,6 +14,7 @@ import {
   Separator,
   Spinner,
   Stack,
+  Tabs,
   Text,
 } from '@chakra-ui/react';
 import {
@@ -469,7 +470,26 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
         </Card.Body>
       </Card.Root>
 
-      {/* ─── 2. Primary: install / update CrossPoint ────────────────────── */}
+      {/* ─── 2-4. Action tabs ───────────────────────────────────────────── */}
+      <Tabs.Root defaultValue="install" variant="enclosed" fitted>
+        <Tabs.List>
+          <Tabs.Trigger value="install">
+            <LuZap />
+            Install / update
+          </Tabs.Trigger>
+          <Tabs.Trigger value="backup">
+            <LuHardDrive />
+            Back up & restore
+          </Tabs.Trigger>
+          {hasResetSection && (
+            <Tabs.Trigger value="reset">
+              <LuRotateCcw />
+              Reset to factory
+            </Tabs.Trigger>
+          )}
+        </Tabs.List>
+
+        <Tabs.Content value="install">
       <ActionCard
         tone="primary"
         icon={<LuZap />}
@@ -566,6 +586,9 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
         </Disclosure>
       </ActionCard>
 
+        </Tabs.Content>
+
+        <Tabs.Content value="backup">
       {/* ─── 3. Backup & restore ────────────────────────────────────────── */}
       <ActionCard
         icon={<LuHardDrive />}
@@ -613,8 +636,11 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
         </Stack>
       </ActionCard>
 
+        </Tabs.Content>
+
+        {hasResetSection && (
+          <Tabs.Content value="reset">
       {/* ─── 4. Reset to factory ────────────────────────────────────────── */}
-      {hasResetSection && (
         <ActionCard
           tone="warning"
           icon={<LuRotateCcw />}
@@ -704,7 +730,9 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
             </Alert.Description>
           </Alert.Root>
         </ActionCard>
-      )}
+          </Tabs.Content>
+        )}
+      </Tabs.Root>
 
       {/* ─── 5. Progress modal (auto-opens on operation start) ──────────── */}
       <Dialog.Root
