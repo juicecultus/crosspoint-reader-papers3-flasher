@@ -11,9 +11,9 @@ const x3Config: DeviceConfig = {
   factoryNote:
     'If you want to preserve your stock firmware, use Save full flash to create a backup before flashing CrossPoint.',
   bootModeHint:
-    'hold the BOOT button (G0) while pressing the RST button, then release both',
+    'unplug the USB-C cable and plug it back in — the X3 will re-enumerate and be detectable again',
   restartHint:
-    'Once you complete a write operation, you may need to restart your Xteink X3 by pressing the RST button on the device.',
+    'Once you complete a write operation, your Xteink X3 will restart automatically. If it stays unresponsive, unplug and replug the USB-C cable.',
   fetchVersions: () => getX3FirmwareRemoteData().then((d) => d.x3),
   flashFirmwareAction: 'flashX3Firmware',
   stockFullFlash: {
