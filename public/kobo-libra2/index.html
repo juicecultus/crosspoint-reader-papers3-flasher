@@ -58,7 +58,7 @@
 	<ul class="plain">
 		<li><strong>Your books are kept.</strong> They live on the device's third partition and nothing on this page writes to it.</li>
 		<li><strong>Reading positions and annotations are not kept.</strong> They belong to Kobo's reader, which stops running.</li>
-		<li><strong>The recovery partition is never touched</strong>, and neither is the bootloader or your device's serial number and panel calibration. Kobo's own factory restore still works afterwards: hold power and a page key together for ten seconds and the device is a stock Kobo again, at the cost of the books on it.</li>
+		<li><strong>The recovery partition is never touched</strong>, and neither is the bootloader or your device's serial number and panel calibration. Everything Kobo needs to put itself back is still on the device afterwards. Reaching it is a stock reinstall over USB, or an action in this system's own Settings, and it is not the button gesture: see <a href="#what-the-browser-cannot-do">what this page can and cannot do</a>.</li>
 	</ul>
 
 	<div class="notice notice-warn" id="backup-notice">
@@ -70,9 +70,10 @@
 			this page cannot take that copy and cannot check one exists.
 		</p>
 		<p>
-			What is left instead is Kobo's factory restore, which this flow never
-			breaks. That is a real net and it is not the same net: it gives you back a
-			stock Kobo, not your device exactly as it was, and it reformats the
+			What is left instead is putting Kobo's own software back, which this flow
+			never makes impossible: everything that does it is still on the device
+			afterwards. That is a real net and it is not the same net: it gives you back
+			a stock Kobo, not your device exactly as it was, and it reformats the
 			partition your books are on.
 		</p>
 		<p>
@@ -230,6 +231,19 @@
 			That is not a fallback for when something goes wrong; it is the step.
 		</li>
 	</ul>
+
+	<h3>The way back to Kobo</h3>
+	<p>
+		It is a stock reinstall over USB, or, once it has been proven on real
+		hardware, an action in this system's own Settings that hands the device
+		back to Kobo's recovery. It is <strong>not</strong> the button gesture.
+		Holding power and a page key together does give you a stock Kobo back on
+		a device that is still running Kobo's software, and we have watched it
+		do exactly that. It does not fire on a device running this system: it
+		was held four times, on two builds, and every attempt was an ordinary
+		start. The recovery partition itself is never touched by any of this,
+		which is what both routes back rely on.
+	</p>
 </section>
 
 <!-- ------------------------------------------------------------------ -->
@@ -239,7 +253,7 @@
 		<li><strong>Nothing appears in Chrome's device picker.</strong> The device is not in fastboot. Power it fully off and try step 3 again. A failed attempt costs nothing.</li>
 		<li><strong>It appeared once and then stopped.</strong> Plug the cable directly into the computer. The bootloader's USB does not survive a hub, and the first attempt after entering fastboot is unreliable in general.</li>
 		<li><strong>Chrome could not open the device.</strong> On Windows the fastboot interface needs the WinUSB driver bound to it. On Linux it needs a udev rule. macOS needs nothing.</li>
-		<li><strong>The device will not boot after an install.</strong> Hold power and a page key together for ten seconds. That is Kobo's factory restore. It rewrites the bootloader environment, the kernel and the device tree from the recovery partition and reformats the other two, so you get a stock Kobo back and lose the books on it.</li>
+		<li><strong>The device will not boot after an install.</strong> Power it fully off and put it back in fastboot, then install again, or send it Kobo's own software instead. Do not rely on holding power and a page key: that gesture is decided before any of this runs and it does not fire once these writes are on the device, which was held four times on two builds and measured. What puts a Kobo back is a stock reinstall over this same cable.</li>
 	</ul>
 </section>
 
