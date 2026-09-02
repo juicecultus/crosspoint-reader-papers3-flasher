@@ -133,8 +133,8 @@ export default function Home() {
             <Stack gap={1} textStyle="sm" color="grey">
               <Text>
                 This tool uses the <b>Web Serial API</b> to communicate with
-                your device over USB. It requires <b>Chrome or Edge</b> —
-                Safari, Firefox, and other browsers are not supported.
+                your device over USB. It requires <b>Chrome or Edge</b>. Safari,
+                Firefox, and other browsers are not supported.
               </Text>
               <Text>
                 The Kobo Libra 2 tool uses the <b>WebUSB API</b> and the same
