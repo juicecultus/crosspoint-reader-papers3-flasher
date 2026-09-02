@@ -16,9 +16,9 @@ export default function Home() {
       <Stack gap={2} textAlign="center" py={6}>
         <Heading size="2xl">EinkHub Flash Tools</Heading>
         <Text color="grey" textStyle="lg">
-          Web-based firmware tools for e-ink readers running{' '}
-          <b>CrossPoint</b> open-source firmware. Back up, restore, and flash
-          your device directly from the browser using the Web Serial API.
+          Web-based firmware tools for e-ink readers running <b>CrossPoint</b>{' '}
+          and <b>InkHub</b> open-source firmware. Back up, restore, and flash
+          your device directly from the browser.
         </Text>
       </Stack>
 
@@ -88,6 +88,41 @@ export default function Home() {
               </Card.Body>
             </Card.Root>
           </Link>
+
+          <a href="/kobo-libra2" style={{ textDecoration: 'none' }}>
+            <Card.Root
+              variant="outline"
+              size="lg"
+              cursor="pointer"
+              _hover={{ borderColor: 'purple.500', shadow: 'md' }}
+              transition="all 0.2s"
+              height="100%"
+            >
+              <Card.Header>
+                <Flex alignItems="center" gap={2}>
+                  <Heading size="lg">Kobo Libra 2</Heading>
+                  <Badge colorPalette="purple" variant="solid" size="sm">
+                    i.MX6SLL
+                  </Badge>
+                </Flex>
+              </Card.Header>
+              <Card.Body>
+                <Stack gap={2}>
+                  <Text>
+                    Kobo&apos;s 7-inch reader, running InkHub instead of
+                    Kobo&apos;s own software: a mainline Linux kernel, a
+                    launcher drawn to match the stock screens, KOReader, a
+                    terminal, Wi-Fi and no store and no account. Try the whole
+                    system from memory first, which writes nothing to the
+                    device, and install it only if you like it.
+                  </Text>
+                  <Text textStyle="sm" color="grey">
+                    Try from memory, or install over the cable
+                  </Text>
+                </Stack>
+              </Card.Body>
+            </Card.Root>
+          </a>
         </SimpleGrid>
       </Stack>
 
@@ -100,6 +135,11 @@ export default function Home() {
                 This tool uses the <b>Web Serial API</b> to communicate with
                 your device over USB. It requires <b>Chrome or Edge</b> —
                 Safari, Firefox, and other browsers are not supported.
+              </Text>
+              <Text>
+                The Kobo Libra 2 tool uses the <b>WebUSB API</b> and the same
+                browsers, because that device is flashed over its own bootloader
+                rather than a serial port.
               </Text>
               <Text>
                 Select your device above to access flash controls, full backup
