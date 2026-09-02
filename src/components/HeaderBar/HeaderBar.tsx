@@ -16,14 +16,40 @@ import { LuGithub, LuSun } from 'react-icons/lu';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+// Every device with a page of its own, and the pages the bar offers for it.
+// The two ESP32 devices have a Flash page and a Debug page; the Kobo Libra 2
+// has one page, because it is flashed over its own bootloader and there is no
+// serial port behind it to debug. So its nav is the one entry rather than a
+// pair, and the bar names the device either way.
+const DEVICES = [
+  {
+    base: '/x3',
+    label: 'Xteink X3',
+    pages: [
+      { href: '/x3', label: 'Flash' },
+      { href: '/x3/debug', label: 'Debug' },
+    ],
+  },
+  {
+    base: '/papers3',
+    label: 'Paper S3',
+    pages: [
+      { href: '/papers3', label: 'Flash' },
+      { href: '/papers3/debug', label: 'Debug' },
+    ],
+  },
+  {
+    base: '/kobo-libra2',
+    label: 'Kobo Libra 2',
+    pages: [{ href: '/kobo-libra2', label: 'Install' }],
+  },
+];
+
 export default function HeaderBar() {
   const pathname = usePathname();
 
   // Determine the device context from the URL
-  const isX3 = pathname.startsWith('/x3');
-  const isPaperS3 = pathname.startsWith('/papers3');
-  const deviceBase = isX3 ? '/x3' : isPaperS3 ? '/papers3' : null;
-  const deviceLabel = isX3 ? 'Xteink X3' : isPaperS3 ? 'Paper S3' : null;
+  const device = DEVICES.find((d) => pathname.startsWith(d.base));
 
   return (
     <Box bg="header-bar.bg" px={4}>
@@ -33,25 +59,22 @@ export default function HeaderBar() {
             <Link href="/">EinkHub</Link>
           </Heading>
           <Flex h={16} alignItems="center" gap={2}>
-            {deviceBase ? (
+            {device ? (
               <>
                 <Text textStyle="sm" color="header-bar.fg" fontWeight="bold">
-                  {deviceLabel}
+                  {device.label}
                 </Text>
-                <Text textStyle="sm">
-                  <Link href={deviceBase}>
-                    {pathname === deviceBase ? <b>Flash</b> : 'Flash'}
-                  </Link>
-                </Text>
-                <Text textStyle="sm">
-                  <Link href={`${deviceBase}/debug`}>
-                    {pathname === `${deviceBase}/debug` ? (
-                      <b>Debug</b>
-                    ) : (
-                      'Debug'
-                    )}
-                  </Link>
-                </Text>
+                {device.pages.map((page) => (
+                  <Text key={page.href} textStyle="sm">
+                    <Link href={page.href}>
+                      {pathname === page.href ? (
+                        <b>{page.label}</b>
+                      ) : (
+                        page.label
+                      )}
+                    </Link>
+                  </Text>
+                ))}
               </>
             ) : (
               <Text textStyle="sm" color="header-bar.fg">

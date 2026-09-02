@@ -6,6 +6,7 @@
     "lint": "yarn eslint --max-warnings 0 --cache && yarn prettier --check . && yarn tsc",
     "lint:fix": "yarn eslint --max-warnings 0 --cache --fix && yarn prettier --write .",
     "dev": "next dev",
+    "test": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON --test \"src/kobo/tests/*.test.ts\"",
     "build": "next build",
     "start": "next start",
     "prepare": "husky"

@@ -18,8 +18,6 @@ import {
   Text,
 } from '@chakra-ui/react';
 import {
-  LuChevronDown,
-  LuChevronRight,
   LuCircleCheck,
   LuDownload,
   LuHardDrive,
@@ -32,8 +30,11 @@ import {
   LuZap,
 } from 'react-icons/lu';
 import type { FirmwareInfo } from '@/utils/firmwareIdentifier';
+import ActionCard from '@/components/ActionCard';
+import Disclosure from '@/components/Disclosure';
 import FileUpload, { FileUploadHandle } from '@/components/FileUpload';
 import Steps from '@/components/Steps';
+import VersionMeta from '@/components/VersionMeta';
 import { useEspOperations } from '@/esp/useEspOperations';
 
 export interface DeviceConfig {
@@ -66,102 +67,6 @@ export interface DeviceConfig {
 }
 
 type VersionInfo = { version: string; releaseDate: string };
-
-/**
- * Helper: section card with a leading icon, title, description, and body slot.
- * Keeps every card visually consistent: same padding, border, gap.
- */
-function ActionCard({
-  icon,
-  title,
-  description,
-  children,
-  tone = 'default',
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description?: React.ReactNode;
-  children: React.ReactNode;
-  tone?: 'default' | 'primary' | 'warning';
-}) {
-  const accent =
-    tone === 'primary'
-      ? 'blue.solid'
-      : tone === 'warning'
-      ? 'orange.solid'
-      : 'border';
-  return (
-    <Card.Root variant="outline" borderColor={accent} borderLeftWidth="3px">
-      <Card.Body>
-        <Stack gap={4}>
-          <Stack gap={1}>
-            <HStack gap={2} alignItems="center">
-              <Box color={accent} display="inline-flex" fontSize="lg">
-                {icon}
-              </Box>
-              <Heading size="md">{title}</Heading>
-            </HStack>
-            {description && (
-              <Text color="fg.muted" textStyle="sm">
-                {description}
-              </Text>
-            )}
-          </Stack>
-          {children}
-        </Stack>
-      </Card.Body>
-    </Card.Root>
-  );
-}
-
-/**
- * Helper: lightweight disclosure with chevron, used for "Other install options"
- * and the bottom "Help & safety" accordion.
- */
-function Disclosure({
-  label,
-  defaultOpen = false,
-  children,
-}: {
-  label: string;
-  defaultOpen?: boolean;
-  children: React.ReactNode;
-}) {
-  const [open, setOpen] = useState(defaultOpen);
-  return (
-    <Stack gap={2}>
-      <Button
-        variant="ghost"
-        size="sm"
-        justifyContent="flex-start"
-        onClick={() => setOpen((o) => !o)}
-        color="fg.muted"
-        px={2}
-      >
-        <Box as="span" mr={1} display="inline-flex">
-          {open ? <LuChevronDown /> : <LuChevronRight />}
-        </Box>
-        {label}
-      </Button>
-      {open && <Box pl={6}>{children}</Box>}
-    </Stack>
-  );
-}
-
-function VersionMeta({
-  version,
-  releaseDate,
-}: {
-  version?: string;
-  releaseDate?: string;
-}) {
-  return (
-    <Text color="fg.muted" textStyle="xs">
-      {version ? `${version}` : 'Loading…'}
-      {releaseDate ? ` · released ${releaseDate}` : ''}
-    </Text>
-  );
-}
 
 export default function FlashPage({ config }: { config: DeviceConfig }) {
   // ─── Persistent device connection ──────────────────────────────────────

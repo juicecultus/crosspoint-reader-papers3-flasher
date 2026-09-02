@@ -89,7 +89,7 @@ export default function Home() {
             </Card.Root>
           </Link>
 
-          <a href="/kobo-libra2" style={{ textDecoration: 'none' }}>
+          <Link href="/kobo-libra2" style={{ textDecoration: 'none' }}>
             <Card.Root
               variant="outline"
               size="lg"
@@ -122,7 +122,7 @@ export default function Home() {
                 </Stack>
               </Card.Body>
             </Card.Root>
-          </a>
+          </Link>
         </SimpleGrid>
       </Stack>
 

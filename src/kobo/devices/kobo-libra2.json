@@ -1,0 +1,216 @@
+{
+  "schema": 1,
+  "id": "kobo-libra2",
+  "name": "Kobo Libra 2",
+  "model": "N418",
+  "soc": "i.MX6SLL",
+  "board": "E70K10, hwconfig bPCB 101",
+  "summary": "The only device InkHub has ever run on. One development unit and one working unit, both Libra 2.",
+
+  "usb": {
+    "vendorId": 6353,
+    "productId": 3330,
+    "vendorIdHex": "0x18d1",
+    "productIdHex": "0x0d02",
+    "interfaceClass": 255,
+    "interfaceSubclass": 66,
+    "interfaceProtocol": 3,
+    "manufacturerName": "FSL",
+    "productName": "USB download gadget",
+    "note": "CONFIG_G_DNL_VENDOR_NUM, CONFIG_G_DNL_PRODUCT_NUM and CONFIG_G_DNL_MANUFACTURER in include/configs/mx6sll_ntx_android.h lines 23 to 25. The interface triple is f_fastboot.c lines 54 to 56. Field-confirmed on 2026-08-30, docs/kernel-boot-experiments.md section 11."
+  },
+
+  "entry": {
+    "title": "Put the Libra 2 into fastboot",
+    "note": "The button sequence itself is NOT here any more. It is page copy, written once in index.html step 3, because there is one gesture and the page shows it to both tabs; app.js reads only the warnings below, which are facts about this device rather than words about the page.",
+    "warnings": [
+      "Do not hold power together with a page key. That is Kobo's factory-restore gesture and it erases the device.",
+      "If nothing appears within about 40 seconds, power cycle and try again. A failed enumeration burns nothing."
+    ],
+    "source": "mainline/phase2/live/RUNBOOK.md section 1, and docs/kernel-boot-experiments.md section 11."
+  },
+
+  "checks": [
+    {
+      "id": "usb-ids",
+      "source": "usb",
+      "label": "USB identity",
+      "expect": "18d1:0d02, interface ff/42/03",
+      "requiredFor": ["backup", "live", "install"],
+      "why": "The vendor, product and interface triple this bootloader's fastboot gadget reports. Chrome filters on the first two before the device is even offered."
+    },
+    {
+      "id": "version",
+      "source": "getvar",
+      "name": "version",
+      "expect": "0.4",
+      "requiredFor": ["install"],
+      "why": "The fastboot protocol version this U-Boot answers. Read off the wire on 2026-08-30. Weak on its own, and it is here to catch a device that is answering fastboot but is not this bootloader."
+    },
+    {
+      "id": "max-download-size",
+      "source": "getvar",
+      "name": "max-download-size",
+      "expect": "0x19000000",
+      "requiredFor": ["install"],
+      "why": "CONFIG_FASTBOOT_BUF_SIZE, 400 MiB. Confirmed from the wire. Every payload here is sent in one shot and must fit under it."
+    },
+    {
+      "id": "hwcfg-pcb",
+      "source": "getvar",
+      "name": "hwcfg.PCB",
+      "expect": "101",
+      "requiredFor": ["install"],
+      "why": "The board revision byte, hwconfig offset 16. This is the same byte the on-device gate checks, and it is the row docs/second-device.md marks must match exactly. Nothing checks it before a fastboot write, so an install refuses if the bootloader will not answer it."
+    },
+    {
+      "id": "hwcfg-display",
+      "source": "getvar",
+      "name": "hwcfg.DisplayResolution",
+      "expect": "16",
+      "requiredFor": ["install"],
+      "why": "16 is 1680x1264, the ED070KH3 panel. The panel timings in this device tree are that panel's."
+    },
+    {
+      "id": "serialno",
+      "source": "getvar",
+      "name": "serialno",
+      "expect": null,
+      "requiredFor": [],
+      "why": "Recorded for the log, never gated on. It is the SoC serial printed as two decimal numbers, and it differs on every device."
+    }
+  ],
+
+  "unreadable": [
+    "getvar all, product, serial and every partition-* query answer FAILVariable not implemented. The identity this page can read is the four hwcfg values above and nothing else.",
+    "Fastboot has no read command at all, so nothing written can be read back from the browser. The backup is taken by the device instead: the backup action below RAM-boots before anything is written and the device copies its own head region, p1 and p2 onto its own books partition, so the browser never carries one byte off the device. DEVIATIONS 378.",
+    "The panel VCOM, the waveform id and the waveform mode version are all rows docs/second-device.md marks must match exactly, and none of them is reachable over fastboot. They are checked on the device by mainline/rootfs/usr/sbin/libra2-vcom, which refuses to bring the display up if it cannot read them."
+  ],
+
+  "unwritable": [
+    "Everything outside the three targets an install uses: the bootloader, the environment block, the hwconfig record, the serial number, the waveform slot, the recovery partition and the FAT partition. None of them is written here.",
+    "Sector 1285, the device tree slot's NTX header, is in no fastboot target: ntxfw ends at 1284 and dtb starts at 1286. It does not need one. The bootloader writes that sector itself out of the body it has just been sent to the dtb target, ntx_header_update() in f_fastboot.c lines 1017 to 1064, read back off the development unit on 2026-09-02 and identical to what tools/ntx-bin-header.py wrap produces. DEVIATIONS 344. So three fastboot writes are a complete install."
+  ],
+
+  "actions": {
+    "backup": {
+      "artefact": "backup",
+      "via": "fastboot-boot",
+      "writes": "one new folder on the books partition",
+      "note": "Its own action rather than a step of the install, because it is a separate RAM boot with a separate button sequence in front of it and the install neither sends it nor waits for it. The page offers it first and the install is offered with or without it."
+    },
+    "live": {
+      "artefact": "live",
+      "via": "fastboot-boot",
+      "writes": "nothing",
+      "note": "The whole system, RAM-booted. The image runs the same board gate and reads the same per-panel calibration an installed system does, so a live session that comes up is direct evidence that the identity gate passes on this hardware."
+    },
+    "install": {
+      "writes": [
+        {
+          "step": 1,
+          "target": "rootfs",
+          "artefact": "rootfs",
+          "via": "fastboot-flash",
+          "label": "the system partition",
+          "note": "rootfs is the fastboot name for p1. The MBR partitions register as rootfs (p1), recoveryfs (p2) and vfat (p3); this writes the first and never the other two."
+        },
+        {
+          "step": 2,
+          "target": "kernel",
+          "artefact": "kernel",
+          "via": "fastboot-flash",
+          "label": "the kernel",
+          "note": "The raw slot from sector 2048. On the Kobo branch the loader reads a fixed 11264 sectors and never looks at a header, so the payload is a bare zImage."
+        },
+        {
+          "step": 3,
+          "target": "dtb",
+          "artefact": "dtb",
+          "via": "fastboot-flash",
+          "label": "the device tree",
+          "note": "The raw slot from sector 1286. This is the body only. Its header sector, one sector lower, is written by the bootloader itself out of this body, which is what makes these three writes a complete install. DEVIATIONS 344."
+        },
+        {
+          "step": 4,
+          "artefact": "finisher",
+          "via": "fastboot-boot",
+          "optional": true,
+          "label": "the check, on the device",
+          "note": "A RAM-booted payload that reads the three slots back and says on the panel whether every read-back matched. It is the only read-back this route has, and it is not needed for the device to boot: it confirms the header sector the bootloader already wrote and rewrites it only if it differs. A release without it installs, and the first start is the check."
+        }
+      ]
+    }
+  },
+
+  "release": {
+    "owner": "juicecultus",
+    "repo": "libra2-linuxos",
+    "manifestAsset": "manifest.json",
+    "assetBase": "/dl/",
+    "upstream": "https://github.com/juicecultus/libra2-linuxos/releases/latest/download/",
+    "note": "manifest.json is the name tools/release.sh publishes and mainline/rootfs/usr/sbin/libra2-update fetches. assetBase is a same-origin path: GitHub sends no Access-Control-Allow-Origin on release downloads, so the page cannot fetch them cross-origin, and vercel.json routes /dl/ through this site. Point assetBase at upstream only on a host that serves CORS headers for it."
+  },
+
+  "artefacts": {
+    "live": {
+      "key": "live",
+      "required": ["live"],
+      "asset": "fastboot-live.img",
+      "label": "InkHub Live",
+      "note": "out/phase2/live/fastboot-live.img, sent whole and RAM-booted. Nothing is written."
+    },
+    "rootfs": {
+      "key": "webp1",
+      "required": ["install"],
+      "asset": "p1.ext4.gz",
+      "label": "the system partition",
+      "note": "The bundle's own p1.ext4.xz cannot be used here: no browser has xz, and the pieces inside the tar have no URL of their own. So the release publishes a gzip copy as its own asset, because DecompressionStream('gzip') is already in every browser that has WebUSB. Its webp1_plain_sha256 is the hash of the unpacked image, which the finisher reads back against."
+    },
+    "kernel": {
+      "key": "webkernel",
+      "required": ["install"],
+      "asset": "zImage",
+      "label": "the kernel",
+      "note": "The bare zImage, NOT the bundle's kernel-slot.img. kernel-slot.img carries the sector 2047 header in front of the kernel and the fastboot kernel target starts at 2048, so sending it here would shift the whole image by one sector. The Kobo branch of the loader never reads that header sector."
+    },
+    "dtb": {
+      "key": "webdtb",
+      "required": ["install"],
+      "asset": "imx6sll-kobo-libra2.dtb",
+      "label": "the device tree",
+      "note": "The body only. The bundle's dtb-hdr.bin has nowhere to go over this channel and needs nowhere: the bootloader writes the header sector itself from this body. See unwritable above."
+    },
+    "finisher": {
+      "key": "finisher",
+      "required": [],
+      "optional": ["install"],
+      "asset": "fastboot-finish.img",
+      "label": "the check",
+      "note": "Verification, not the install. The three writes above leave a bootable device on their own, so a release that does not carry this one still installs and the page says the first start is the check. A release that carries it has the three slots read back on the device and the answer drawn on the panel."
+    },
+    "backup": {
+      "key": "backup",
+      "required": ["backup"],
+      "asset": "fastboot-backup.img",
+      "label": "the backup pass",
+      "note": "out/phase2/backup/fastboot-backup.img, RAM-booted BEFORE anything is written. The device copies its own boot region, the stock system and the recovery partition into a folder on its own books partition, checks every byte back off the card, and harvests the two Realtek Bluetooth files off the stock system while they are still there, which is what lets a browser install keep Bluetooth. It ends with the device running from memory and there is no way back into fastboot from there, so the button sequence is done twice: once for this and once for the install. It is required for the backup action and belongs to no other: a release without it cannot offer the pass, and the install is offered either way. DEVIATIONS 378 and 380."
+    }
+  },
+
+  "finish": {
+    "title": "Now power-cycle the device by hand",
+    "steps": [
+      "Unplug the cable.",
+      "Hold the power button for about 20 seconds, until the screen changes.",
+      "Let go, then press power again to switch the device back on."
+    ],
+    "expect": "Within about a minute, the launcher's home screen: portrait, page keys on the right, the app tiles, and the version along the bottom.",
+    "source": "docs/flashing.md step 8, and docs/second-device.md section 4.5."
+  },
+
+  "recovery": {
+    "gesture": "Hold power and a page key together for ten seconds. That is Kobo's factory restore. It rewrites the bootloader environment, the kernel slot and the device tree from the recovery partition and reformats p1 and p3, so the device is a stock Kobo again at the cost of the books on it.",
+    "untouched": "This flow never writes the bootloader, the environment block, the hwconfig record, the serial number, the waveform, the recovery partition p2 or the FAT partition p3. Your books are on p3."
+  }
+}
