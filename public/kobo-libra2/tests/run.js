@@ -199,6 +199,24 @@ if (profile) {
 		good.checks.find((c) => c.id === 'serialno').state,
 	);
 
+	// The answers as the dev unit's bootloader actually gives them, measured
+	// 2026-09-02: a bracketed field index, the field name, an equals sign and
+	// the value in hex. serialno refuses with "Value not set".
+	const measured = gateIdentity(profile, 'install', libra2, {
+		...answersGood,
+		'hwcfg.PCB': { value: '[0] PCB=0x65' },
+		'hwcfg.DisplayResolution': { value: '[31] DisplayResolution=0x10' },
+		'hwcfg.RAMType': { value: '[29] RAMType=0x05' },
+		'hwcfg.RamSize': { value: '[16] RamSize=0x03' },
+		serialno: { error: 'Value not set' },
+	});
+	assertTrue('the bootloader\'s own answer format passes the install gate', measured.ok);
+	const measuredWrong = gateIdentity(profile, 'install', libra2, {
+		...answersGood,
+		'hwcfg.PCB': { value: '[0] PCB=0x31' },
+	});
+	assertTrue('and a different board in that format is refused', !measuredWrong.ok);
+
 	const wrongBoard = gateIdentity(profile, 'install', libra2, {
 		...answersGood,
 		'hwcfg.PCB': { value: '49' },

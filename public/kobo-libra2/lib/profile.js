@@ -156,8 +156,8 @@ function usbMatches(device, usb) {
 // compare as numbers when both sides read as numbers, and as trimmed lowercase
 // strings otherwise. Nothing here coerces a mismatch into a match.
 function sameValue(expected, actual) {
-	const a = String(expected).trim().toLowerCase();
-	const b = String(actual).trim().toLowerCase();
+	const a = valuePart(String(expected).trim().toLowerCase());
+	const b = valuePart(String(actual).trim().toLowerCase());
 	if (a === b) {
 		return true;
 	}
@@ -166,7 +166,18 @@ function sameValue(expected, actual) {
 	return na !== null && nb !== null && na === nb;
 }
 
-function numberOf(text) {
+// The Libra 2's bootloader answers an hwcfg variable as its field index
+// in brackets, the field's name, an equals sign and the value in hex:
+// "[0] PCB=0x65" for hwcfg.PCB (measured 2026-09-02, dev unit). Only the
+// value after the equals sign is the answer; the index and the name are
+// the bootloader's own labelling and are dropped before comparing.
+function valuePart(text) {
+	const m = /^(?:\[\d+\]\s*)?(?:[a-z0-9_.]+=)?(.*)$/.exec(text);
+	return m ? m[1].trim() : text;
+}
+
+function numberOf(raw) {
+	const text = valuePart(raw);
 	if (/^0x[0-9a-f]+$/.test(text)) {
 		return Number.parseInt(text.slice(2), 16);
 	}
