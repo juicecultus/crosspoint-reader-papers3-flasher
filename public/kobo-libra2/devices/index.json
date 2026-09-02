@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "note": "Every device this page can talk to. Adding one is adding a profile beside this file and a line here. The page picks the only device when there is one and asks when there is more than one.",
+  "devices": [
+    {
+      "id": "kobo-libra2",
+      "name": "Kobo Libra 2",
+      "profile": "devices/kobo-libra2.json",
+      "status": "supported"
+    }
+  ]
+}

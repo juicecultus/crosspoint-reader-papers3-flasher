@@ -1,0 +1,421 @@
+/* einkhub.com installer.
+ *
+ * Plain CSS, one file, no build step and no framework. The register is the
+ * README's: ink on paper, generous measure, nothing that moves on its own.
+ * The one animated thing is the progress bar, because it is reporting.
+ */
+
+:root {
+	--ink: #1a1a18;
+	--ink-soft: #4a4a46;
+	--paper: #faf9f6;
+	--paper-panel: #ffffff;
+	--rule: #d8d5cc;
+	--rule-strong: #b3afa2;
+	--warn-ground: #fdf6e6;
+	--warn-rule: #d8b658;
+	--good: #1f6b3a;
+	--bad: #9a2723;
+	--quiet: #6b6b64;
+	--measure: 34rem;
+	color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--ink: #e8e6e0;
+		--ink-soft: #b6b3ab;
+		--paper: #16161a;
+		--paper-panel: #1e1e23;
+		--rule: #33333a;
+		--rule-strong: #4c4c55;
+		--warn-ground: #2a2417;
+		--warn-rule: #8a7333;
+		--good: #6fbf8b;
+		--bad: #e8827c;
+		--quiet: #8d8a83;
+		color-scheme: dark;
+	}
+}
+
+* { box-sizing: border-box; }
+
+html {
+	font-size: 17px;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	background: var(--paper);
+	color: var(--ink);
+	font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+	line-height: 1.55;
+}
+
+main {
+	max-width: 52rem;
+	margin: 0 auto;
+	padding: 0 1.5rem 5rem;
+}
+
+/* --- the site's own bar ------------------------------------------------ */
+
+.site-nav {
+	max-width: 52rem;
+	margin: 0 auto;
+	padding: 0.9rem 1.5rem 0;
+	display: flex;
+	gap: 0.45rem;
+	align-items: baseline;
+	font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+	font-size: 0.9rem;
+	color: var(--ink-soft);
+}
+
+.site-nav a { color: inherit; }
+.site-nav .sep { color: var(--quiet); }
+.site-nav .here { color: var(--ink); font-weight: 600; }
+
+/* --- masthead --------------------------------------------------------- */
+
+.masthead {
+	max-width: 52rem;
+	margin: 0 auto;
+	padding: 3rem 1.5rem 1.5rem;
+	border-bottom: 1px solid var(--rule);
+}
+
+.wordmark {
+	margin: 0;
+	font-size: 1.6rem;
+	font-weight: 600;
+	letter-spacing: 0.02em;
+}
+
+.tagline {
+	margin: 0.2rem 0 0;
+	color: var(--ink-soft);
+	font-size: 1rem;
+}
+
+/* --- structure -------------------------------------------------------- */
+
+.step {
+	padding: 2.5rem 0 0;
+}
+
+.step + .step {
+	border-top: 1px solid var(--rule);
+	margin-top: 2.5rem;
+}
+
+h1 {
+	font-size: 2rem;
+	line-height: 1.2;
+	margin: 0 0 1rem;
+	max-width: var(--measure);
+}
+
+h2 {
+	font-size: 1.3rem;
+	margin: 0 0 0.8rem;
+}
+
+h3 {
+	font-size: 1.05rem;
+	margin: 1.4rem 0 0.4rem;
+}
+
+p, li {
+	max-width: var(--measure);
+}
+
+.lede {
+	font-size: 1.1rem;
+	color: var(--ink-soft);
+}
+
+.num {
+	display: inline-block;
+	min-width: 1.6em;
+	color: var(--quiet);
+	font-variant-numeric: tabular-nums;
+}
+
+a {
+	color: inherit;
+	text-underline-offset: 0.15em;
+}
+
+/* --- panels ----------------------------------------------------------- */
+
+.two-up {
+	display: grid;
+	gap: 1.2rem;
+	grid-template-columns: 1fr;
+	margin: 1.5rem 0;
+}
+
+@media (min-width: 46rem) {
+	.two-up { grid-template-columns: 1fr 1fr; }
+}
+
+.panel {
+	background: var(--paper-panel);
+	border: 1px solid var(--rule);
+	border-radius: 3px;
+	padding: 1.1rem 1.3rem 1.3rem;
+}
+
+.panel h2, .panel h3 { margin-top: 0; }
+.panel p, .panel li { max-width: none; }
+
+.panel-action {
+	display: flex;
+	flex-direction: column;
+}
+
+.panel-action > p:last-of-type { margin-bottom: 0; }
+
+.writes {
+	margin: 0 0 0.8rem;
+	font-size: 0.82rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+.writes-none { color: var(--good); }
+.writes-some { color: var(--bad); }
+
+/* --- notices ---------------------------------------------------------- */
+
+.notice {
+	border: 1px solid var(--rule-strong);
+	border-left-width: 4px;
+	border-radius: 3px;
+	padding: 1rem 1.2rem;
+	margin: 1.5rem 0;
+	background: var(--paper-panel);
+}
+
+.notice h3 { margin-top: 0; }
+.notice p, .notice li { max-width: none; }
+.notice p:last-child { margin-bottom: 0; }
+
+.notice-warn {
+	background: var(--warn-ground);
+	border-left-color: var(--warn-rule);
+}
+
+/* --- lists ------------------------------------------------------------ */
+
+ul.plain {
+	padding-left: 1.1rem;
+}
+
+ul.plain li { margin-bottom: 0.5rem; }
+
+ol.entry {
+	padding-left: 1.4rem;
+	max-width: var(--measure);
+}
+
+ol.entry li {
+	margin-bottom: 0.6rem;
+}
+
+/* --- verdicts --------------------------------------------------------- */
+
+.verdict {
+	border-left: 4px solid var(--rule-strong);
+	padding: 0.6rem 0 0.6rem 1rem;
+	margin: 1rem 0;
+	max-width: var(--measure);
+}
+
+.verdict.good { border-left-color: var(--good); }
+.verdict.bad { border-left-color: var(--bad); }
+.verdict.waiting { border-left-color: var(--rule-strong); color: var(--ink-soft); }
+.verdict p { margin: 0.3rem 0; }
+.verdict p:first-child { margin-top: 0; }
+.verdict p:last-child { margin-bottom: 0; }
+
+/* --- the gate table --------------------------------------------------- */
+
+table.gate {
+	border-collapse: collapse;
+	margin: 1.2rem 0;
+	width: 100%;
+	font-size: 0.92rem;
+}
+
+table.gate caption {
+	text-align: left;
+	color: var(--quiet);
+	font-size: 0.85rem;
+	padding-bottom: 0.4rem;
+}
+
+table.gate th, table.gate td {
+	text-align: left;
+	padding: 0.4rem 0.8rem 0.4rem 0;
+	border-bottom: 1px solid var(--rule);
+	vertical-align: top;
+}
+
+table.gate thead th {
+	font-size: 0.78rem;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--quiet);
+	font-weight: 600;
+}
+
+table.gate td.value {
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	font-size: 0.85rem;
+}
+
+td.state-pass { color: var(--good); }
+td.state-fail { color: var(--bad); font-weight: 600; }
+td.state-declined, td.state-noted { color: var(--quiet); }
+
+/* --- facts ------------------------------------------------------------ */
+
+dl.facts {
+	display: grid;
+	grid-template-columns: max-content 1fr;
+	gap: 0.2rem 1rem;
+	margin: 1rem 0;
+	font-size: 0.95rem;
+}
+
+dl.facts dt { color: var(--quiet); }
+dl.facts dd { margin: 0; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.88rem; }
+
+.notes {
+	margin: 1rem 0;
+	padding: 0.8rem 1rem;
+	background: var(--paper-panel);
+	border: 1px solid var(--rule);
+	border-radius: 3px;
+	font-size: 0.95rem;
+	max-width: var(--measure);
+}
+
+.notes p { max-width: none; }
+.notes p:first-child { margin-top: 0; }
+.notes p:last-child { margin-bottom: 0; }
+
+/* --- buttons ---------------------------------------------------------- */
+
+.button {
+	font: inherit;
+	font-size: 0.98rem;
+	padding: 0.5rem 1.1rem;
+	border: 1px solid var(--rule-strong);
+	border-radius: 3px;
+	background: var(--paper-panel);
+	color: var(--ink);
+	cursor: pointer;
+}
+
+.button:hover:not(:disabled) { border-color: var(--ink); }
+.button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+
+.button-primary {
+	background: var(--ink);
+	color: var(--paper);
+	border-color: var(--ink);
+}
+
+.button-primary:hover:not(:disabled) { opacity: 0.88; }
+
+.button:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.confirm { margin: 0.8rem 0; }
+.confirm label { display: block; font-size: 0.92rem; margin-bottom: 0.3rem; }
+.confirm input {
+	font: inherit;
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	padding: 0.35rem 0.5rem;
+	border: 1px solid var(--rule-strong);
+	border-radius: 3px;
+	background: var(--paper);
+	color: var(--ink);
+}
+
+.unavailable {
+	color: var(--bad);
+	font-size: 0.92rem;
+}
+
+/* --- progress --------------------------------------------------------- */
+
+.phase {
+	font-size: 1.05rem;
+	margin: 0.5rem 0;
+}
+
+.bar {
+	height: 8px;
+	background: var(--rule);
+	border-radius: 4px;
+	overflow: hidden;
+	max-width: var(--measure);
+}
+
+.bar-fill {
+	height: 100%;
+	width: 0;
+	background: var(--ink);
+	transition: width 120ms linear;
+}
+
+.bar-label {
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	font-size: 0.85rem;
+	color: var(--quiet);
+	margin: 0.4rem 0 0;
+	min-height: 1.2em;
+}
+
+.log {
+	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+	font-size: 0.82rem;
+	line-height: 1.6;
+	background: var(--paper-panel);
+	border: 1px solid var(--rule);
+	border-radius: 3px;
+	padding: 0.9rem 1rem;
+	max-height: 22rem;
+	overflow: auto;
+	white-space: pre-wrap;
+	word-break: break-word;
+	margin: 0;
+}
+
+.log .line-bad { color: var(--bad); }
+.log .line-good { color: var(--good); }
+
+/* --- footer ----------------------------------------------------------- */
+
+footer {
+	border-top: 1px solid var(--rule);
+	margin-top: 3rem;
+	padding: 1.5rem;
+	max-width: 52rem;
+	margin-left: auto;
+	margin-right: auto;
+	color: var(--quiet);
+	font-size: 0.88rem;
+}
+
+footer p { max-width: var(--measure); }
+
+[hidden] { display: none !important; }

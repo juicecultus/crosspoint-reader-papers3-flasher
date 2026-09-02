@@ -70,6 +70,13 @@ const prettierConfig = [
 export default [
   // Ignore .gitignore files/folder in eslint
   includeIgnoreFile(gitignorePath),
+  // The Kobo Libra 2 installer is vendored from the libra2-linux repository. It
+  // is static files with their own house style and their own tests, it is not
+  // part of the Next build, and it is not this config's to reformat.
+  {
+    name: 'kobo-libra2/installer',
+    ignores: ['public/kobo-libra2/**'],
+  },
   // Javascript Config
   ...jsConfig,
   // React Config

@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Install InkHub on a Kobo Libra 2</title>
+<meta name="description" content="Put InkHub on a Kobo Libra 2 from Google Chrome, or try the whole system from RAM without writing anything to the device.">
+<link rel="canonical" href="https://einkhub.com/kobo-libra2">
+<link rel="stylesheet" href="/kobo-libra2/styles.css">
+</head>
+<body>
+
+<nav class="site-nav" aria-label="einkhub.com">
+	<a href="/">EinkHub</a>
+	<span class="sep" aria-hidden="true">/</span>
+	<span class="here">Kobo Libra 2</span>
+</nav>
+
+<header class="masthead">
+	<p class="wordmark">InkHub</p>
+	<p class="tagline">A Linux operating system for the Kobo Libra 2.</p>
+</header>
+
+<main>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-intro">
+	<h1>Put InkHub on your Libra 2, from this page</h1>
+
+	<p class="lede">
+		This page talks to your e-reader over the USB cable. It can run the whole
+		system from memory without writing anything to the device, and it can
+		install it. It works in Google Chrome and Microsoft Edge on a computer.
+	</p>
+
+	<div class="two-up">
+		<div class="panel">
+			<h2>What you get</h2>
+			<p>
+				A mainline Linux kernel, a launcher drawn to match the stock reader's
+				own screens, KOReader, a terminal, Wi-Fi, the frontlight on Kobo's own
+				calibration, and no store and no account. The
+				<a href="https://github.com/juicecultus/libra2-linuxos">source is on GitHub</a>
+				and everything on the image is built from it.
+			</p>
+		</div>
+		<div class="panel">
+			<h2>What you lose</h2>
+			<p>
+				Kobo's own software stops running. No Kobo sync, no Kobo store, no
+				Overdrive, and no Kobo reader. Your device stops being a Kobo until you
+				put it back.
+			</p>
+		</div>
+	</div>
+
+	<h2>What is kept, and what is not</h2>
+	<ul class="plain">
+		<li><strong>Your books are kept.</strong> They live on the device's third partition and nothing on this page writes to it.</li>
+		<li><strong>Reading positions and annotations are not kept.</strong> They belong to Kobo's reader, which stops running.</li>
+		<li><strong>The recovery partition is never touched</strong>, and neither is the bootloader or your device's serial number and panel calibration. Kobo's own factory restore still works afterwards: hold power and a page key together for ten seconds and the device is a stock Kobo again, at the cost of the books on it.</li>
+	</ul>
+
+	<div class="notice notice-warn" id="backup-notice">
+		<h3>A browser cannot take a backup, and the project's own rule is that you take one</h3>
+		<p>
+			The documented way to install InkHub starts with a verified copy of the
+			whole card on two machines, because that copy is the only thing that puts
+			your device back byte for byte. Fastboot has no read command at all, so
+			this page cannot take that copy and cannot check one exists.
+		</p>
+		<p>
+			What is left instead is Kobo's factory restore, which this flow never
+			breaks. That is a real net and it is not the same net: it gives you back a
+			stock Kobo, not your device exactly as it was, and it reformats the
+			partition your books are on.
+		</p>
+		<p>
+			If you want the full backup first, it is
+			<a href="https://github.com/juicecultus/libra2-linuxos/blob/main/docs/second-device.md">docs/second-device.md</a>
+			in the repository. It needs a shell on the device and an evening.
+		</p>
+	</div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-browser">
+	<h2><span class="num">1</span> Your browser</h2>
+	<div id="browser-verdict" class="verdict">Checking.</div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-release">
+	<h2><span class="num">2</span> The release</h2>
+	<div id="release-verdict" class="verdict">Looking for the latest release.</div>
+	<dl id="release-facts" class="facts" hidden></dl>
+	<div id="release-notes" class="notes" hidden></div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-entry">
+	<h2><span class="num">3</span> Put the device into fastboot</h2>
+	<p>
+		Fastboot is the small mode inside the device's own bootloader that accepts
+		a cable. It draws nothing on the screen, so a device in fastboot looks like
+		a device that is off.
+	</p>
+	<ol class="entry" id="entry-steps"></ol>
+	<div class="notice notice-warn" id="entry-warnings"></div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-connect">
+	<h2><span class="num">4</span> Connect</h2>
+	<p>
+		Chrome will ask you to pick the device. There will be one entry, and if
+		there is none the device is not in fastboot yet.
+	</p>
+	<p>
+		<button id="connect" class="button button-primary" type="button">Connect to the device</button>
+	</p>
+	<div id="connect-verdict" class="verdict" hidden></div>
+	<table id="gate-table" class="gate" hidden>
+		<caption>What the bootloader said about itself</caption>
+		<thead>
+			<tr><th scope="col">Check</th><th scope="col">Expected</th><th scope="col">Answered</th><th scope="col">Verdict</th></tr>
+		</thead>
+		<tbody></tbody>
+	</table>
+	<div id="gate-notes" class="notes" hidden></div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-choose" hidden>
+	<h2><span class="num">5</span> Try it, or install it</h2>
+
+	<div class="two-up">
+		<div class="panel panel-action">
+			<h3>Try InkHub Live</h3>
+			<p class="writes writes-none">Writes nothing at all</p>
+			<p>
+				The whole system, running from memory. The launcher, the terminal, the
+				display, the frontlight, Wi-Fi and your own books, mounted read only.
+				KOReader is not in this image; it is too large to boot from memory, and
+				the tile on the home screen says so.
+			</p>
+			<p>
+				Nothing you do in a live session is saved. Hold the power button, turn
+				the device back on, and your Kobo is exactly as it was.
+			</p>
+			<p><button id="do-live" class="button button-primary" type="button" disabled>Try InkHub Live</button></p>
+			<p class="unavailable" id="live-unavailable" hidden></p>
+		</div>
+
+		<div class="panel panel-action">
+			<h3>Install InkHub</h3>
+			<p class="writes writes-some">Writes to the device</p>
+			<p>
+				Replaces the system partition, the kernel and the device tree. Your
+				books are on a different partition and are not touched. Kobo's own
+				software is gone until you restore it.
+			</p>
+			<p>
+				The last step of an install is not something a browser can do. Read
+				<a href="#what-the-browser-cannot-do">what the browser cannot do</a>
+				below before you start.
+			</p>
+			<p class="confirm" id="install-confirm" hidden>
+				<label for="install-typed">
+					Type <strong>install</strong> to confirm you have read the two notices above.
+				</label>
+				<input id="install-typed" type="text" autocomplete="off" spellcheck="false" size="12">
+			</p>
+			<p><button id="do-install" class="button" type="button" disabled>Install InkHub</button></p>
+			<p class="unavailable" id="install-unavailable" hidden></p>
+		</div>
+	</div>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-progress" hidden>
+	<h2><span class="num">6</span> What is happening</h2>
+	<p class="phase" id="phase">Starting.</p>
+	<div class="bar"><div class="bar-fill" id="bar-fill"></div></div>
+	<p class="bar-label" id="bar-label"></p>
+	<h3>The log</h3>
+	<pre id="log" class="log" aria-live="polite"></pre>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-finish" hidden>
+	<h2><span class="num">7</span> <span id="finish-title">Now power-cycle the device by hand</span></h2>
+	<ol class="entry" id="finish-steps"></ol>
+	<p id="finish-expect" class="lede"></p>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="what-the-browser-cannot-do">
+	<h2>What this page can and cannot do</h2>
+
+	<h3>It can</h3>
+	<ul class="plain">
+		<li>Read the four things the bootloader will say about itself, and refuse anything that is not a Libra 2.</li>
+		<li>Send the live image and run it from memory, writing nothing.</li>
+		<li>Write the system partition, the kernel slot and the device tree body.</li>
+	</ul>
+
+	<h3>It cannot</h3>
+	<ul class="plain">
+		<li>
+			<strong>Take a backup.</strong> Fastboot has no read command. Nothing on the
+			card can be copied off through this cable.
+		</li>
+		<li>
+			<strong>Read anything back.</strong> The same missing command means nothing
+			written here can be checked afterwards from the browser. The finisher, which
+			runs on the device, is what does the checking.
+		</li>
+		<li>
+			<strong>Write the last sector.</strong> The bootloader checks one sector on
+			every boot to find the device tree, and that sector sits in a gap between
+			two of the ranges fastboot will write to. So a browser cannot finish an
+			install on its own. The install ends by starting a small program from memory
+			on the device, which reads the three slots back, writes that last sector, and
+			says on the screen whether every read-back matched.
+		</li>
+		<li>
+			<strong>Keep your Bluetooth firmware.</strong> The Realtek Bluetooth blobs are
+			not this project's to redistribute, and the on-device installer copies them
+			off your own stock system before it replaces it. This route replaces it
+			without that copy, so Bluetooth will have no firmware afterwards.
+		</li>
+		<li>
+			<strong>Restart the device.</strong> You power-cycle it by hand at the end.
+			That is not a fallback for when something goes wrong; it is the step.
+		</li>
+	</ul>
+</section>
+
+<!-- ------------------------------------------------------------------ -->
+<section class="step" id="step-trouble">
+	<h2>If something goes wrong</h2>
+	<ul class="plain">
+		<li><strong>Nothing appears in Chrome's device picker.</strong> The device is not in fastboot. Power it fully off and try step 3 again. A failed attempt costs nothing.</li>
+		<li><strong>It appeared once and then stopped.</strong> Plug the cable directly into the computer. The bootloader's USB does not survive a hub, and the first attempt after entering fastboot is unreliable in general.</li>
+		<li><strong>Chrome could not open the device.</strong> On Windows the fastboot interface needs the WinUSB driver bound to it. On Linux it needs a udev rule. macOS needs nothing.</li>
+		<li><strong>The device will not boot after an install.</strong> Hold power and a page key together for ten seconds. That is Kobo's factory restore. It rewrites the bootloader environment, the kernel and the device tree from the recovery partition and reformats the other two, so you get a stock Kobo back and lose the books on it.</li>
+	</ul>
+</section>
+
+</main>
+
+<footer>
+	<p>
+		InkHub is GPL-2.0-or-later.
+		<a href="https://github.com/juicecultus/libra2-linuxos">The source, the engineering log and the runbooks are on GitHub.</a>
+	</p>
+	<p>
+		This page is not affiliated with Rakuten Kobo. Kobo and Libra are their
+		trademarks and are used here to say which device this software runs on.
+	</p>
+</footer>
+
+<script type="module" src="/kobo-libra2/app.js"></script>
+</body>
+</html>
