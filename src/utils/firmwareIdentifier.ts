@@ -133,7 +133,7 @@ function extractVersion(data: Uint8Array, searchLimit = 25000): string {
  */
 export function identifyFirmware(firmwareData: Uint8Array): FirmwareInfo {
   // Modern CrossPoint builds (Paper S3 and X3) embed a "CrossPoint version:
-  // X.Y.Z" banner that the device prints on boot. Match that first — it
+  // X.Y.Z" banner that the device prints on boot. Match that first: it
   // covers every currently-shipped release and gives us the version inline.
   // Fall back to legacy markers for older builds that predate the banner.
   const searchLimit = 25000;

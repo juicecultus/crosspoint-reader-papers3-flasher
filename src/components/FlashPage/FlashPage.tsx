@@ -69,7 +69,7 @@ type VersionInfo = { version: string; releaseDate: string };
 
 /**
  * Helper: section card with a leading icon, title, description, and body slot.
- * Keeps every card visually consistent — same padding, border, gap.
+ * Keeps every card visually consistent: same padding, border, gap.
  */
 function ActionCard({
   icon,
@@ -166,7 +166,7 @@ function VersionMeta({
 export default function FlashPage({ config }: { config: DeviceConfig }) {
   // ─── Persistent device connection ──────────────────────────────────────
   // Once the user picks a device via "Connect", the SerialPort lives in this
-  // state and every action reuses it — no more per-action chooser prompt.
+  // state and every action reuses it: no more per-action chooser prompt.
   const [serialPort, setSerialPort] = useState<SerialPort | null>(null);
   const [connectError, setConnectError] = useState<string | null>(null);
 
@@ -220,7 +220,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
   // ─── Progress modal ────────────────────────────────────────────────────
   // The modal opens automatically when an operation starts and stays open
   // (locked, no click-outside dismissal) until the operation finishes. After
-  // completion the user reviews the result and closes manually — that way
+  // completion the user reviews the result and closes manually: that way
   // critical 'do not disconnect' state is impossible to miss.
   const [progressOpen, setProgressOpen] = useState(false);
   const wasRunningRef = useRef(false);
@@ -228,7 +228,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     // Auto-open when a new operation starts.
     if (isRunning && !wasRunningRef.current) {
       setProgressOpen(true);
-      // Invalidate any cached identify result — partition state may change.
+      // Invalidate any cached identify result: partition state may change.
       setIdentifiedFirmware(null);
       setIdentifyError(null);
     }
@@ -241,7 +241,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
     );
   }, []);
 
-  // Clear cached port if the user unplugs the device — otherwise we'd try to
+  // Clear cached port if the user unplugs the device, otherwise we'd try to
   // open a dead handle on the next action and silently fail.
   useEffect(() => {
     if (typeof navigator === 'undefined' || !('serial' in navigator)) return;
@@ -267,7 +267,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
       setIdentifiedFirmware(null);
       setIdentifyError(null);
     } catch (e) {
-      // Aborted prompts throw DOMException with name 'NotFoundError' — that's
+      // Aborted prompts throw DOMException with name 'NotFoundError': that's
       // just the user cancelling, not worth surfacing.
       if ((e as DOMException).name !== 'NotFoundError') {
         setConnectError((e as Error).message || 'Connect failed');
@@ -445,13 +445,13 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                 {serialPort ? (
                   <>
                     Click <b>Identify firmware</b> to read both app partitions
-                    and detect what&apos;s currently installed. Optional — all
+                    and detect what&apos;s currently installed. Optional: all
                     actions below work without identifying.
                   </>
                 ) : (
                   <>
                     Click <b>Connect device</b> once and every action below
-                    reuses the same connection — no more per-action chooser
+                    reuses the same connection: no more per-action chooser
                     prompts.
                   </>
                 )}
@@ -496,7 +496,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
         title={`Install or update ${config.firmwareLabel}`}
         description={
           <>
-            Fast update — overwrites the backup app slot and swaps to it.
+            Fast update: overwrites the backup app slot and swaps to it.
             Keeps your books, fonts, and settings. ~30 seconds.
           </>
         }
@@ -525,7 +525,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                 </Text>
                 <Text textStyle="xs" color="fg.muted">
                   Use this if you&apos;re currently on stock M5Stack firmware,
-                  bmorcelli&apos;s Launcher, or any non-CrossPoint image —
+                  bmorcelli&apos;s Launcher, or any non-CrossPoint image:
                   fast update can&apos;t run from those states. Writes a
                   complete CrossPoint image from address 0, restoring the
                   dual-OTA layout. ~25 minutes.
@@ -550,7 +550,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                 Install from custom .bin
               </Text>
               <Text textStyle="xs" color="fg.muted">
-                For advanced users — flashes any app-partition binary you
+                For advanced users: flashes any app-partition binary you
                 provide into the backup OTA slot.
               </Text>
               <HStack gap={2}>
@@ -697,7 +697,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
             <Disclosure label="Stock firmware variants (OTA fast flash)">
               <Stack gap={2}>
                 <Text textStyle="xs" color="fg.muted">
-                  Fast OTA reset — requires the device to still have the
+                  Fast OTA reset: requires the device to still have the
                   dual-OTA partition layout.
                 </Text>
                 <Button
@@ -738,7 +738,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
       <Dialog.Root
         open={progressOpen}
         onOpenChange={(details) => {
-          // Lock the modal while running — accidental dismissal mid-flash
+          // Lock the modal while running: accidental dismissal mid-flash
           // would still leave the operation running but hide all feedback.
           if (isRunning) return;
           setProgressOpen(details.open);
@@ -759,7 +759,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                   {isRunning ? (
                     <>
                       <Spinner size="sm" color="blue.solid" />
-                      <Dialog.Title>Running — do not disconnect</Dialog.Title>
+                      <Dialog.Title>Running: do not disconnect</Dialog.Title>
                     </>
                   ) : (
                     <>
@@ -879,7 +879,7 @@ export default function FlashPage({ config }: { config: DeviceConfig }) {
                 </Text>
                 <Text>
                   <b>Full install</b> writes a complete 16 MB image starting
-                  at address 0 — bootloader, partition table, and app — so
+                  at address 0 (bootloader, partition table, and app), so
                   it works from any starting state, including a wiped or
                   non-OTA partition layout. Takes ~25 minutes and erases
                   on-chip data (SD card unaffected).

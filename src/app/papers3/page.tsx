@@ -12,9 +12,9 @@ const paperS3Config: DeviceConfig = {
   chipName: 'ESP32-S3',
   firmwareLabel: 'CrossPoint PaperS3',
   factoryNote:
-    "Use Save full flash to back up your device before flashing CrossPoint PaperS3. If you ever need to return to factory, the Stock firmware recovery section below will fully restore the original M5Stack image — even if you've previously installed a custom partition layout (e.g. bmorcelli's Launcher).",
+    "Use Save full flash to back up your device before flashing CrossPoint PaperS3. If you ever need to return to factory, the Stock firmware recovery section below will fully restore the original M5Stack image, even if you've previously installed a custom partition layout (e.g. bmorcelli's Launcher).",
   bootModeHint:
-    'with the device connected via USB, long-press the side power button until the status light on the back flashes red — that signals download mode',
+    'with the device connected via USB, long-press the side power button until the status light on the back flashes red: that signals download mode',
   restartHint:
     'Once you complete a write operation, you may need to restart your M5Stack Paper S3 by pressing the RST button on the side of the device.',
   fetchVersions: () =>

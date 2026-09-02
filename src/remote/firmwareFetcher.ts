@@ -95,7 +95,7 @@ interface CrossPointPaperS3FullFlashParts {
 // Fetches all three assets of the latest crosspoint-reader-papers3 release
 // (bootloader / partitions / firmware) so the client can stitch them into a
 // flash-from-0 image. This is what users on a single-app factory layout (stock
-// M5Stack or Launcher) need to migrate to CrossPoint — the OTA fast-flash path
+// M5Stack or Launcher) need to migrate to CrossPoint: the OTA fast-flash path
 // can't work from that starting state because there's no second app slot.
 // Server-side concatenation would balloon the response with 14 MB of 0xff
 // padding, so the client does the padding instead.
@@ -252,7 +252,7 @@ export async function getPaperS3StockFirmwareRemoteData(): Promise<PaperS3StockF
 export async function getPaperS3StockFirmware() {
   // Returns the raw M5Burner flash-from-0 bundle (~1.4 MB, bootloader +
   // partition table + factory app). The client pads this to the 16 MB
-  // writeFullFlash contract — avoids shipping 14 MB of 0xff over the wire.
+  // writeFullFlash contract: avoids shipping 14 MB of 0xff over the wire.
   const { downloadUrl } = await getPaperS3StockFirmwareRemoteData();
   const response = await fetch(downloadUrl);
   return new Uint8Array(await response.arrayBuffer());
