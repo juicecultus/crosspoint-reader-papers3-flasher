@@ -599,6 +599,18 @@ assertTrue(
 	'and still answers a missing release with the plain sentence',
 	route.includes('No published release carries'),
 );
+assertTrue(
+	'and passes a Range header through in both directions',
+	route.includes("request.headers.get('range')") && route.includes('content-range'),
+);
+// A 70 MB image on a slow line outlives the 300 s a serverless function is
+// given, and the standalone copy of this proxy runs on the edge for the same
+// reason. A runtime edited back to nodejs is a download that stops in the
+// middle, so it is pinned here.
+assertTrue(
+	'and it runs on the edge runtime, where the stream is not cut off by a function ceiling',
+	route.includes("export const runtime = 'edge'"),
+);
 
 // House style, in the files this round wrote.
 for (const file of ['index.html', 'styles.css', 'app.js', 'lib/fastboot.js', 'lib/manifest.js', 'lib/profile.js', 'lib/release.js', 'devices/kobo-libra2.json', 'devices/index.json']) {

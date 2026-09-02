@@ -44,13 +44,13 @@ const CARRIED = [
   'last-modified',
 ];
 
-export const runtime = 'nodejs';
+// A GET of an asset can take minutes on a slow line, and a 70 MB image can
+// outlive the 300 s a serverless function is given. The edge runtime streams for
+// as long as the download takes, so that ceiling is not there to be hit, and the
+// page reports a stall rather than this file inventing a shorter limit. It is
+// also where the standalone copy of this proxy runs.
+export const runtime = 'edge';
 export const dynamic = 'force-dynamic';
-
-// A GET of an asset can take minutes on a slow line. The platform's own ceiling
-// is what stops it, and the page reports a stall rather than this file inventing
-// a shorter one.
-export const maxDuration = 300;
 
 function refuse(status: number, message: string) {
   return new Response(`${message}\n`, {
