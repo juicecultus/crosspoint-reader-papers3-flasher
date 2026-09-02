@@ -21,6 +21,13 @@ const nextConfig: NextConfig = {
       // /kobo-libra2 is the address in the device list, and the file behind it
       // is the installer's own index.html.
       { source: '/kobo-libra2', destination: '/kobo-libra2/index.html' },
+      // The page's own links are relative ("styles.css", "app.js", "./lib/",
+      // "devices/") and the address has no trailing slash, so the browser asks
+      // for them at the site root. These four names are the installer's alone.
+      { source: '/styles.css', destination: '/kobo-libra2/styles.css' },
+      { source: '/app.js', destination: '/kobo-libra2/app.js' },
+      { source: '/lib/:path*', destination: '/kobo-libra2/lib/:path*' },
+      { source: '/devices/:path*', destination: '/kobo-libra2/devices/:path*' },
     ];
   },
   async headers() {
