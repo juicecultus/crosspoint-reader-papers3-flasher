@@ -12,8 +12,6 @@
 	--paper-panel: #ffffff;
 	--rule: #d8d5cc;
 	--rule-strong: #b3afa2;
-	--warn-ground: #fdf6e6;
-	--warn-rule: #d8b658;
 	--good: #1f6b3a;
 	--bad: #9a2723;
 	--quiet: #6b6b64;
@@ -29,8 +27,6 @@
 		--paper-panel: #1e1e23;
 		--rule: #33333a;
 		--rule-strong: #4c4c55;
-		--warn-ground: #2a2417;
-		--warn-rule: #8a7333;
 		--good: #6fbf8b;
 		--bad: #e8827c;
 		--quiet: #8d8a83;
@@ -59,24 +55,6 @@ main {
 	padding: 0 1.5rem 5rem;
 }
 
-/* --- the site's own bar ------------------------------------------------ */
-
-.site-nav {
-	max-width: 52rem;
-	margin: 0 auto;
-	padding: 0.9rem 1.5rem 0;
-	display: flex;
-	gap: 0.45rem;
-	align-items: baseline;
-	font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-	font-size: 0.9rem;
-	color: var(--ink-soft);
-}
-
-.site-nav a { color: inherit; }
-.site-nav .sep { color: var(--quiet); }
-.site-nav .here { color: var(--ink); font-weight: 600; }
-
 /* --- masthead --------------------------------------------------------- */
 
 .masthead {
@@ -101,8 +79,17 @@ main {
 
 /* --- structure -------------------------------------------------------- */
 
+.intro { padding: 2.5rem 0 0; }
+
 .step {
 	padding: 2.5rem 0 0;
+}
+
+.flow > .step:first-child { padding-top: 2rem; }
+
+#step-progress {
+	border-top: 1px solid var(--rule);
+	margin-top: 2.5rem;
 }
 
 .step + .step {
@@ -148,39 +135,74 @@ a {
 	text-underline-offset: 0.15em;
 }
 
-/* --- panels ----------------------------------------------------------- */
+/* --- tabs -------------------------------------------------------------- */
+
+.tabstrip {
+	display: flex;
+	gap: 0.15rem;
+	margin: 2.5rem 0 0;
+	border-bottom: 1px solid var(--rule);
+	overflow-x: auto;
+}
+
+.tab {
+	font: inherit;
+	font-size: 1rem;
+	padding: 0.55rem 1.1rem;
+	margin-bottom: -1px;
+	border: 1px solid transparent;
+	border-radius: 3px 3px 0 0;
+	background: none;
+	color: var(--ink-soft);
+	white-space: nowrap;
+	cursor: pointer;
+}
+
+.tab:hover { color: var(--ink); }
+
+.tab[aria-selected="true"] {
+	background: var(--paper-panel);
+	border-color: var(--rule);
+	border-bottom-color: var(--paper-panel);
+	color: var(--ink);
+	font-weight: 600;
+}
+
+.tab:focus-visible { outline: 2px solid var(--ink); outline-offset: -3px; }
+
+.tabpanel { padding: 2rem 0 0; }
+.tabpanel:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+
+/* --- cards ------------------------------------------------------------- */
 
 .two-up {
 	display: grid;
 	gap: 1.2rem;
 	grid-template-columns: 1fr;
-	margin: 1.5rem 0;
+	margin: 0 0 1.2rem;
 }
 
 @media (min-width: 46rem) {
 	.two-up { grid-template-columns: 1fr 1fr; }
 }
 
-.panel {
+.card {
 	background: var(--paper-panel);
 	border: 1px solid var(--rule);
 	border-radius: 3px;
-	padding: 1.1rem 1.3rem 1.3rem;
+	padding: 1.2rem 1.4rem 1.4rem;
 }
 
-.panel h2, .panel h3 { margin-top: 0; }
-.panel p, .panel li { max-width: none; }
+.card h2, .card h3 { margin-top: 0; }
+.card h3 + p { margin-top: 0; }
+.card p, .card li { max-width: none; }
+.card > p:last-child { margin-bottom: 0; }
 
-.panel-action {
-	display: flex;
-	flex-direction: column;
-}
-
-.panel-action > p:last-of-type { margin-bottom: 0; }
+.card-action { border-left: 3px solid var(--rule-strong); }
 
 .writes {
-	margin: 0 0 0.8rem;
-	font-size: 0.82rem;
+	margin: 0 0 0.5rem;
+	font-size: 0.78rem;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
 	font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -189,25 +211,37 @@ a {
 .writes-none { color: var(--good); }
 .writes-some { color: var(--bad); }
 
-/* --- notices ---------------------------------------------------------- */
+/* --- disclosures ------------------------------------------------------- */
 
-.notice {
-	border: 1px solid var(--rule-strong);
-	border-left-width: 4px;
-	border-radius: 3px;
-	padding: 1rem 1.2rem;
-	margin: 1.5rem 0;
-	background: var(--paper-panel);
+details.more {
+	margin: 1rem 0 0;
+	border-top: 1px solid var(--rule);
+	padding-top: 0.7rem;
 }
 
-.notice h3 { margin-top: 0; }
-.notice p, .notice li { max-width: none; }
-.notice p:last-child { margin-bottom: 0; }
-
-.notice-warn {
-	background: var(--warn-ground);
-	border-left-color: var(--warn-rule);
+details.more summary {
+	cursor: pointer;
+	color: var(--ink-soft);
+	font-size: 0.95rem;
 }
+
+details.more summary:hover { color: var(--ink); }
+details.more summary:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; }
+details.more[open] summary { margin-bottom: 0.6rem; }
+details.more > *:last-child { margin-bottom: 0; }
+
+/* A fact about the device, drawn from its profile. Quiet, not alarming. */
+.note {
+	margin: 1rem 0;
+	padding-left: 1rem;
+	border-left: 2px solid var(--rule-strong);
+	color: var(--ink-soft);
+	font-size: 0.95rem;
+	max-width: var(--measure);
+}
+
+.note p:first-child { margin-top: 0; }
+.note p:last-child { margin-bottom: 0; }
 
 /* --- lists ------------------------------------------------------------ */
 
@@ -354,6 +388,10 @@ dl.facts dd { margin: 0; font-family: ui-monospace, "SF Mono", Menlo, Consolas, 
 	color: var(--bad);
 	font-size: 0.92rem;
 }
+
+/* The same line before anything has been connected: a next step, not a
+   refusal. */
+.unavailable.quiet { color: var(--ink-soft); }
 
 /* A fact about what is about to happen, not a refusal. Quieter than the
    surrounding copy and never red. */

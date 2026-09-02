@@ -27,6 +27,68 @@ const state = {
 	busy: false,
 };
 
+// --- the tabs ----------------------------------------------------------------
+//
+// The strip is in index.html and this reads it, so there is one list of tabs
+// and not two. Try it and Install share the four steps that get a device
+// ready, so those are marked data-flow in the page and shown for both.
+
+const FLOW_TABS = new Set(['try', 'install']);
+
+function tabButtons() {
+	return Array.from(document.querySelectorAll('[role="tab"]'));
+}
+
+// Which tab a link opens. An unknown fragment opens the first tab, which is
+// what a bare visit gets too.
+export function tabFromHash(hash, names) {
+	const wanted = String(hash || '').replace(/^#/, '');
+	return names.includes(wanted) ? wanted : names[0];
+}
+
+function showTab(name) {
+	for (const tab of tabButtons()) {
+		const on = tab.dataset.tab === name;
+		tab.setAttribute('aria-selected', on ? 'true' : 'false');
+		tab.tabIndex = on ? 0 : -1;
+		$(tab.getAttribute('aria-controls')).hidden = !on;
+	}
+	for (const region of document.querySelectorAll('[data-flow]')) {
+		region.hidden = !FLOW_TABS.has(name);
+	}
+}
+
+function openTabFromHash() {
+	showTab(tabFromHash(window.location.hash, tabButtons().map((t) => t.dataset.tab)));
+}
+
+function wireTabs() {
+	const tabs = tabButtons();
+	const names = tabs.map((t) => t.dataset.tab);
+
+	tabs.forEach((tab, index) => {
+		tab.addEventListener('click', () => {
+			window.location.hash = tab.dataset.tab;
+			showTab(tab.dataset.tab);
+		});
+		tab.addEventListener('keydown', (event) => {
+			const step = { ArrowRight: 1, ArrowLeft: -1 }[event.key];
+			let next = null;
+			if (step !== undefined) next = (index + step + tabs.length) % tabs.length;
+			if (event.key === 'Home') next = 0;
+			if (event.key === 'End') next = tabs.length - 1;
+			if (next === null) return;
+			event.preventDefault();
+			window.location.hash = names[next];
+			showTab(names[next]);
+			tabs[next].focus();
+		});
+	});
+
+	window.addEventListener('hashchange', openTabFromHash);
+	openTabFromHash();
+}
+
 // --- small drawing helpers ---------------------------------------------------
 
 function verdict(el, kind, ...lines) {
@@ -89,28 +151,20 @@ function checkBrowser() {
 
 // --- the device profile ------------------------------------------------------
 
-// The page is served from a path on einkhub.com rather than from the root of a
-// site of its own, so the files this module fetches are resolved against this
-// module's own URL. That is the whole of the base path: move the directory and
-// nothing in here needs an edit.
-const asset = (name) => new URL(name, import.meta.url).href;
-
 async function loadProfile() {
-	const index = await (await fetch(asset('devices/index.json'), { cache: 'no-cache' })).json();
+	const index = await (await fetch('devices/index.json', { cache: 'no-cache' })).json();
 	const entry = index.devices.find((d) => d.status === 'supported');
 	if (!entry) {
 		throw new Error('devices/index.json lists no supported device.');
 	}
-	const raw = await (await fetch(asset(entry.profile), { cache: 'no-cache' })).json();
+	const raw = await (await fetch(entry.profile, { cache: 'no-cache' })).json();
 	return parseProfile(raw);
 }
 
-function drawEntrySteps(profile) {
-	$('entry-steps').replaceChildren(...profile.entry.steps.map((text) => {
-		const li = document.createElement('li');
-		li.textContent = text;
-		return li;
-	}));
+// The button sequence itself is page copy, in index.html: there is one gesture
+// and it is written once. The warnings around it are the profile's, because
+// they are facts about this device.
+function drawEntryWarnings(profile) {
 	$('entry-warnings').replaceChildren(...profile.entry.warnings.map((text) => {
 		const p = document.createElement('p');
 		p.textContent = text;
@@ -138,9 +192,8 @@ async function loadRelease(profile) {
 	} catch (err) {
 		if (err instanceof ReleaseError && err.message === 'NO_RELEASE') {
 			verdict(el, 'waiting',
-				'There is no published release yet, so there is nothing for this page to send.',
-				"InkHub runs on hardware today and the code is public. What is not published is a downloadable image, and the reason is in the repository: the panel waveform inside the image belongs to E Ink and is not this project's to redistribute. Until the image reads that file off your own device instead of carrying a copy, there is nothing here to hand you.",
-				'Everything else on this page is finished and waiting for that release.');
+				'There is no release to send yet.',
+				'InkHub runs on hardware today and the code is public. What is not published yet is a downloadable image. When there is one, this page will find it and offer it here.');
 			return null;
 		}
 		verdict(el, 'bad', err.message, err.detail || '');
@@ -234,7 +287,7 @@ async function connect() {
 		});
 	} catch (err) {
 		verdict(el, 'waiting',
-			'No device was picked. If the picker was empty, the Libra 2 is not in fastboot yet: power it fully off and try step 3 again.',
+			'No device was picked. If the list was empty, the device is not in fastboot yet: power it fully off and run step 3 again.',
 			err.message);
 		return;
 	}
@@ -269,7 +322,7 @@ async function connect() {
 		verdict(el, 'bad',
 			'This is not a Kobo Libra 2 running the bootloader this software was built against, so this page will not send it anything.',
 			live.failed.map((c) => c.label).join(', ') + ' did not match.');
-		$('step-choose').hidden = true;
+		lockActions('The device that answered is not a Libra 2, so nothing is offered for it.');
 		return;
 	}
 
@@ -301,9 +354,20 @@ async function connect() {
 
 // --- step 5: what is on offer ------------------------------------------------
 
-function offerActions() {
-	$('step-choose').hidden = false;
+// Both buttons are off until a device has answered, and each says why. Before
+// a connection that is step 4; after a refused one it is the refusal.
+function lockActions(why) {
+	$('do-live').disabled = true;
+	$('do-install').disabled = true;
+	$('install-confirm').hidden = true;
+	for (const id of ['live-unavailable', 'install-unavailable']) {
+		$(id).className = 'unavailable quiet';
+		$(id).textContent = why;
+		$(id).hidden = false;
+	}
+}
 
+function offerActions() {
 	const canDo = (action) => {
 		if (!state.manifest) {
 			return { ok: false, why: 'There is no release to send.' };
@@ -326,11 +390,13 @@ function offerActions() {
 
 	const liveCan = canDo('live');
 	$('do-live').disabled = !liveCan.ok;
+	$('live-unavailable').className = 'unavailable';
 	$('live-unavailable').textContent = liveCan.ok ? '' : liveCan.why;
 	$('live-unavailable').hidden = liveCan.ok;
 
 	const installCan = canDo('install');
 	$('install-confirm').hidden = !installCan.ok;
+	$('install-unavailable').className = 'unavailable';
 	$('install-unavailable').textContent = installCan.ok ? '' : installCan.why;
 	$('install-unavailable').hidden = installCan.ok;
 	$('do-install').disabled = true;
@@ -433,10 +499,9 @@ async function runInstall() {
 	const checking = hasCheck(state.plans.install);
 
 	try {
-		log("The order below is the runbook's, and it is not arbitrary: the longest");
-		log('transfer happens while every raw slot is still the one Kobo shipped, and');
-		log('the device tree goes last, because writing it is what makes the device');
-		log('start from it.');
+		log('The longest transfer goes first, while every raw slot is still the one');
+		log('Kobo shipped. The device tree goes last, because writing it is what makes');
+		log('the device start from it.');
 		log('');
 
 		for (const step of steps) {
@@ -520,8 +585,8 @@ function drawInstallFinish(checking) {
 	const section = $('step-finish');
 	const first = document.createElement('li');
 	first.textContent = checking
-		? 'Wait for the device to report on its own screen. It reads back everything that was just written and says whether each part matched. If it says a part did not match, do not power the device off and on: read what it says and use the factory restore.'
-		: 'Nothing read the writing back, so the first start is the check. If the device does not come up, hold power and a page key together for ten seconds for the factory restore.';
+		? 'Wait for the device to report on its own screen. It reads back everything that was just written and says whether each part matched. If it says a part did not match, do not power the device off and on: read what it says, then put the device back into fastboot and write it again.'
+		: 'Nothing read the writing back, so the first start is the check. If the device does not come up, put it back into fastboot and install again, or send it Kobo\'s own software over the same cable.';
 	$('finish-steps').prepend(first);
 	section.hidden = false;
 	section.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -530,6 +595,9 @@ function drawInstallFinish(checking) {
 // --- start -------------------------------------------------------------------
 
 async function main() {
+	wireTabs();
+	lockActions('Connect the device in step 4 first.');
+
 	const usable = checkBrowser();
 
 	try {
@@ -539,7 +607,7 @@ async function main() {
 		return;
 	}
 
-	drawEntrySteps(state.profile);
+	drawEntryWarnings(state.profile);
 	drawFinish(state.profile);
 
 	state.manifest = await loadRelease(state.profile);
@@ -554,4 +622,8 @@ async function main() {
 	watchConfirm();
 }
 
-main();
+// The page runs itself. The tests import this module under node to drive the
+// pure pieces above, where there is no document to draw into.
+if (typeof document !== 'undefined') {
+	main();
+}
