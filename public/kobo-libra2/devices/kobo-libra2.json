@@ -93,7 +93,8 @@
   ],
 
   "unwritable": [
-    "Sector 1285, the device tree slot's NTX header. It is the magic U-Boot checks on every boot, and it falls in the gap between the ntxfw target (1030 to 1284) and the dtb target (1286 to 1535). No fastboot target covers it, so the browser cannot write it and cannot complete an install on its own."
+    "Everything outside the three targets an install uses: the bootloader, the environment block, the hwconfig record, the serial number, the waveform slot, the recovery partition and the FAT partition. None of them is written here.",
+    "Sector 1285, the device tree slot's NTX header, is in no fastboot target: ntxfw ends at 1284 and dtb starts at 1286. It does not need one. The bootloader writes that sector itself out of the body it has just been sent to the dtb target, ntx_header_update() in f_fastboot.c lines 1017 to 1064, read back off the development unit on 2026-09-02 and identical to what tools/ntx-bin-header.py wrap produces. DEVIATIONS 344. So three fastboot writes are a complete install."
   ],
 
   "actions": {
@@ -127,14 +128,15 @@
           "artefact": "dtb",
           "via": "fastboot-flash",
           "label": "the device tree",
-          "note": "The raw slot from sector 1286. This is the body only. Its header sector is one sector lower and out of reach."
+          "note": "The raw slot from sector 1286. This is the body only. Its header sector, one sector lower, is written by the bootloader itself out of this body, which is what makes these three writes a complete install. DEVIATIONS 344."
         },
         {
           "step": 4,
           "artefact": "finisher",
           "via": "fastboot-boot",
-          "label": "the last sector, on the device",
-          "note": "A RAM-booted payload that reads the three slots back, writes sector 1285 last, and says on the panel whether every read-back matched. It is the only way the boot gate gets written and the only read-back this route has."
+          "optional": true,
+          "label": "the check, on the device",
+          "note": "A RAM-booted payload that reads the three slots back and says on the panel whether every read-back matched. It is the only read-back this route has, and it is not needed for the device to boot: it confirms the header sector the bootloader already wrote and rewrites it only if it differs. A release without it installs, and the first start is the check."
         }
       ]
     }
@@ -176,14 +178,15 @@
       "required": ["install"],
       "asset": "imx6sll-kobo-libra2.dtb",
       "label": "the device tree",
-      "note": "The body only. The bundle's dtb-hdr.bin has no fastboot target to go to: see unwritable above."
+      "note": "The body only. The bundle's dtb-hdr.bin has nowhere to go over this channel and needs nowhere: the bootloader writes the header sector itself from this body. See unwritable above."
     },
     "finisher": {
       "key": "finisher",
-      "required": ["install"],
+      "required": [],
+      "optional": ["install"],
       "asset": "fastboot-finish.img",
-      "label": "the finisher",
-      "note": "Does not exist yet. Until a release carries it, this page cannot complete an install and says so rather than doing three quarters of one."
+      "label": "the check",
+      "note": "Verification, not the install. The three writes above leave a bootable device on their own, so a release that does not carry this one still installs and the page says the first start is the check. A release that carries it has the three slots read back on the device and the answer drawn on the panel."
     }
   },
 

@@ -109,6 +109,36 @@ if (profile) {
 		assertTrue('an install requires the board revision', pcb.requiredFor.includes('install'));
 	}
 
+	// The check payload is not a gate. Three fastboot writes are a complete
+	// install, because the bootloader writes the device tree's header sector
+	// itself out of the body sent to the dtb target (DEVIATIONS 344). If the
+	// check ever goes back to being required for an install, this is where it
+	// is noticed.
+	const check = profile.artefacts.finisher;
+	assertTrue('the check artefact is in the profile', Boolean(check));
+	if (check) {
+		assertTrue(
+			'an install does not require the check',
+			!check.required.includes('install'),
+		);
+		assertTrue(
+			'and an install uses it when a release carries it',
+			Array.isArray(check.optional) && check.optional.includes('install'),
+		);
+	}
+
+	const writes = profile.actions.install.writes;
+	const bootStep = writes.find((w) => w.via === 'fastboot-boot');
+	assertTrue('the install step that RAM-boots the check exists', Boolean(bootStep));
+	if (bootStep) {
+		assertTrue('and it is the one step marked optional', bootStep.optional === true);
+	}
+	assertEq(
+		'the steps that are not optional are the three fastboot writes',
+		3,
+		writes.filter((w) => w.optional !== true).length,
+	);
+
 	const names = getvarNames(profile);
 	assertTrue('the getvar list asks for hwcfg.PCB', names.includes('hwcfg.PCB'));
 	assertTrue('the getvar list asks for max-download-size', names.includes('max-download-size'));
@@ -158,6 +188,32 @@ assertThrows(
 		usb: { vendorId: 1, productId: 2, interfaceClass: 3, interfaceSubclass: 4, interfaceProtocol: 5 },
 		checks: [{ id: 'a', source: 'usb', requiredFor: ['reflash'] }],
 		artefacts: {},
+		actions: {},
+	}),
+	'unknown action',
+);
+assertThrows(
+	'an artefact both required and optional for one action is refused',
+	() => parseProfile({
+		schema: 1,
+		id: 'x',
+		name: 'x',
+		usb: { vendorId: 1, productId: 2, interfaceClass: 3, interfaceSubclass: 4, interfaceProtocol: 5 },
+		checks: [{ id: 'a', source: 'usb', requiredFor: [] }],
+		artefacts: { thing: { key: 'thing', required: ['install'], optional: ['install'] } },
+		actions: {},
+	}),
+	'both required and optional',
+);
+assertThrows(
+	'an artefact optional for an action that does not exist is refused',
+	() => parseProfile({
+		schema: 1,
+		id: 'x',
+		name: 'x',
+		usb: { vendorId: 1, productId: 2, interfaceClass: 3, interfaceSubclass: 4, interfaceProtocol: 5 },
+		checks: [{ id: 'a', source: 'usb', requiredFor: [] }],
+		artefacts: { thing: { key: 'thing', required: [], optional: ['wipe'] } },
 		actions: {},
 	}),
 	'unknown action',
@@ -437,16 +493,24 @@ if (profile) {
 	assertEq('Live sends one artefact', 1, livePlan.present.length);
 	assertEq('and it is the live image', 'live', livePlan.present[0].name);
 
-	// The finisher does not exist yet, so this release cannot complete an
-	// install. The plan says so by name rather than doing three quarters of it.
+	// The three fastboot writes are a complete install, because the bootloader
+	// writes the device tree's header sector itself out of the body sent to the
+	// dtb target (DEVIATIONS 344). So a release with no check payload installs,
+	// and the check is the only thing it does not get.
 	const installPlan = planArtefacts(profile, parsed, 'install');
-	assertTrue('an install is refused when the finisher is missing', installPlan.ok === false);
-	assertEq('exactly one artefact is missing', 1, installPlan.missing.length);
-	assertEq('and it is the finisher', 'finisher', installPlan.missing[0].name);
+	assertTrue('an install is offered by a release with no check payload', installPlan.ok);
+	assertEq('nothing an install needs is missing', 0, installPlan.missing.length);
+	assertEq('it sends the three writes', 3, installPlan.present.length);
+	assertEq('exactly one optional artefact is absent', 1, installPlan.absent.length);
+	assertEq('and it is the check', 'finisher', installPlan.absent[0].name);
 	assertEq(
-		'the missing artefact names the asset a release should carry',
+		'the absent artefact names the asset a release can carry',
 		'fastboot-finish.img',
-		installPlan.missing[0].asset,
+		installPlan.absent[0].asset,
+	);
+	assertTrue(
+		'and none of the three writes is the optional one',
+		installPlan.present.every((a) => a.optional === false),
 	);
 
 	const complete = parseManifest(manifestText({
@@ -460,6 +524,11 @@ if (profile) {
 	const plan = planArtefacts(profile, complete, 'install');
 	assertTrue('a release carrying all five artefacts can install', plan.ok);
 	assertEq('an install sends four artefacts', 4, plan.present.length);
+	assertEq('nothing is absent from that one', 0, plan.absent.length);
+	assertTrue(
+		'and the check is the artefact marked optional',
+		plan.present.find((a) => a.name === 'finisher').optional === true,
+	);
 	assertEq(
 		'and the rootfs is sent unpacked',
 		'gzip',
@@ -533,6 +602,23 @@ if (orphans.length === 0) {
 } else {
 	fail('every id app.js asks for is in index.html', `missing: ${orphans.join(', ')}`);
 }
+
+// What the page tells a reader about the last sector. It used to say a browser
+// could not finish an install on its own, which was wrong: the bootloader writes
+// that sector itself (DEVIATIONS 344). A page that says it again is a page that
+// talks a reader out of an install that works.
+assertTrue(
+	'the page does not say the browser cannot write the last sector',
+	!html.includes('Write the last sector.'),
+);
+assertTrue(
+	'and it says what happens when a release carries no check',
+	html.includes('the first start is the check'),
+);
+assertTrue(
+	'app.js skips an install step only when the profile marks it optional',
+	appJs.includes('if (step.optional)'),
+);
 
 // The module graph, checked by reading it rather than by loading a browser.
 for (const file of ['app.js', 'lib/fastboot.js', 'lib/manifest.js', 'lib/profile.js', 'lib/release.js']) {

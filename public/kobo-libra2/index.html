@@ -161,10 +161,11 @@
 				software is gone until you restore it.
 			</p>
 			<p>
-				The last step of an install is not something a browser can do. Read
-				<a href="#what-the-browser-cannot-do">what the browser cannot do</a>
-				below before you start.
+				Read <a href="#what-the-browser-cannot-do">what this page can and
+				cannot do</a> below before you start. At the end you power the device
+				off and on by hand.
 			</p>
+			<p class="aside" id="install-verify" hidden></p>
 			<p class="confirm" id="install-confirm" hidden>
 				<label for="install-typed">
 					Type <strong>install</strong> to confirm you have read the two notices above.
@@ -202,7 +203,8 @@
 	<ul class="plain">
 		<li>Read the four things the bootloader will say about itself, and refuse anything that is not a Libra 2.</li>
 		<li>Send the live image and run it from memory, writing nothing.</li>
-		<li>Write the system partition, the kernel slot and the device tree body.</li>
+		<li>Write the system partition, the kernel slot and the device tree. Those three writes are the whole install: the bootloader itself sets up the small record it reads on every start to find the device tree.</li>
+		<li>Start a small program from memory afterwards, when the release carries one, which reads all three back on the device and says on the screen whether each one matched.</li>
 	</ul>
 
 	<h3>It cannot</h3>
@@ -212,17 +214,10 @@
 			card can be copied off through this cable.
 		</li>
 		<li>
-			<strong>Read anything back.</strong> The same missing command means nothing
-			written here can be checked afterwards from the browser. The finisher, which
-			runs on the device, is what does the checking.
-		</li>
-		<li>
-			<strong>Write the last sector.</strong> The bootloader checks one sector on
-			every boot to find the device tree, and that sector sits in a gap between
-			two of the ranges fastboot will write to. So a browser cannot finish an
-			install on its own. The install ends by starting a small program from memory
-			on the device, which reads the three slots back, writes that last sector, and
-			says on the screen whether every read-back matched.
+			<strong>Read anything back itself.</strong> The same missing command means
+			nothing written here can be checked from the browser. That is what the small
+			program on the device is for. If the release does not carry it, the install
+			is still complete and the first start is the check.
 		</li>
 		<li>
 			<strong>Keep your Bluetooth firmware.</strong> The Realtek Bluetooth blobs are

@@ -335,7 +335,27 @@ function offerActions() {
 	$('install-unavailable').hidden = installCan.ok;
 	$('do-install').disabled = true;
 
+	// Whether this release can check its own work. The three writes are the
+	// install either way, so this is a fact about what happens after them and
+	// not a reason to refuse anything.
+	const verify = $('install-verify');
+	if (installCan.ok) {
+		verify.textContent = hasCheck(installCan.plan)
+			? 'After writing, this page starts a small program on the device. It reads all three back and says on the screen whether each one matched.'
+			: 'This release has nothing to check the writing with. The install is still complete, and the first time the device starts is the check.';
+		verify.hidden = false;
+	} else {
+		verify.textContent = '';
+		verify.hidden = true;
+	}
+
 	state.plans = { live: liveCan.plan || null, install: installCan.plan || null };
+}
+
+// The check step is optional. A plan that carries it verifies; a plan that does
+// not still installs, and the page says which of the two it is doing.
+function hasCheck(plan) {
+	return Boolean(plan && plan.present.some((a) => a.optional));
 }
 
 function watchConfirm() {
@@ -410,16 +430,26 @@ async function runInstall() {
 
 	const byName = Object.fromEntries(state.plans.install.present.map((a) => [a.name, a]));
 	const steps = state.profile.actions.install.writes;
+	const checking = hasCheck(state.plans.install);
 
 	try {
 		log("The order below is the runbook's, and it is not arbitrary: the longest");
 		log('transfer happens while every raw slot is still the one Kobo shipped, and');
-		log('the sector the bootloader checks on every boot is written last.');
+		log('the device tree goes last, because writing it is what makes the device');
+		log('start from it.');
 		log('');
 
 		for (const step of steps) {
 			const artefact = byName[step.artefact];
 			if (!artefact) {
+				// A step the release cannot supply is a refusal, unless the profile
+				// says the step is the optional one. There is exactly one of those
+				// and it is the check.
+				if (step.optional) {
+					log(`${step.label}: this release does not carry it, so it is skipped`);
+					log('');
+					continue;
+				}
 				throw new Error(`${step.label}: the release does not carry it.`);
 			}
 			const data = await getBytes(artefact);
@@ -430,12 +460,12 @@ async function runInstall() {
 				log(`flash:${step.target}`);
 				await state.device.flash(step.target, (info) => log(`device: ${info.trim()}`));
 				log(`${step.label} written`, 'good');
-				log('this channel cannot read it back; the finisher does that on the device');
+				log('this channel cannot read it back');
 			} else if (step.via === 'fastboot-boot') {
-				phase('Starting the finisher on the device');
+				phase('Starting the check on the device');
 				log('boot');
 				await state.device.boot((info) => log(`device: ${info.trim()}`));
-				log('the finisher is running on the device', 'good');
+				log('the check is running on the device', 'good');
 			} else {
 				throw new Error(`Unknown step type ${step.via}.`);
 			}
@@ -443,8 +473,10 @@ async function runInstall() {
 		}
 
 		bar(1, 1, 'done');
-		phase('Every payload is on the device. The finisher is writing the last sector and checking the rest.');
-		drawInstallFinish();
+		phase(checking
+			? 'Everything is written. The device is checking it now.'
+			: 'Everything is written. The install is complete and nothing has checked it, so the first start is the check.');
+		drawInstallFinish(checking);
 	} catch (err) {
 		failed(err);
 	} finally {
@@ -483,11 +515,13 @@ function drawLiveFinish() {
 	section.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-function drawInstallFinish() {
+function drawInstallFinish(checking) {
 	drawFinish(state.profile);
 	const section = $('step-finish');
 	const first = document.createElement('li');
-	first.textContent = 'Wait for the finisher to report on the screen. It reads the three slots back, writes the last sector, and says whether every read-back matched. If it says a read-back did not match, do not power-cycle: read what it says and use the factory restore.';
+	first.textContent = checking
+		? 'Wait for the device to report on its own screen. It reads back everything that was just written and says whether each part matched. If it says a part did not match, do not power the device off and on: read what it says and use the factory restore.'
+		: 'Nothing read the writing back, so the first start is the check. If the device does not come up, hold power and a page key together for ten seconds for the factory restore.';
 	$('finish-steps').prepend(first);
 	section.hidden = false;
 	section.scrollIntoView({ behavior: 'smooth', block: 'start' });

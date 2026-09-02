@@ -179,6 +179,15 @@ export function readArtefact(manifest, key) {
 // Which of a profile's artefacts this release actually carries, and which it
 // does not. The page uses the missing list to say plainly what it cannot do
 // rather than to fall back to something it can.
+//
+// An artefact is required for an action or optional for it. The difference is
+// the difference between a release that cannot do the thing and a release that
+// does it without the extra. The Libra 2's finisher is the optional one: the
+// three fastboot writes are a complete install, because the bootloader writes
+// the device tree's header sector itself from the body sent to the dtb target
+// (DEVIATIONS 344), so the finisher is the read-back and not the boot gate. A
+// release that carries it gets verified; a release that does not still
+// installs, and the absent list is how the page says which of the two happened.
 export function planArtefacts(profile, manifest, action) {
 	must(isPlainObject(profile) && isPlainObject(profile.artefacts),
 		'profile: artefacts must be an object');
@@ -189,10 +198,14 @@ export function planArtefacts(profile, manifest, action) {
 
 	const present = [];
 	const missing = [];
+	const absent = [];
 
 	for (const [name, want] of Object.entries(profile.artefacts)) {
 		const requiredFor = Array.isArray(want.required) ? want.required : [];
-		if (!requiredFor.includes(action)) {
+		const optionalFor = Array.isArray(want.optional) ? want.optional : [];
+		const required = requiredFor.includes(action);
+		const optional = optionalFor.includes(action);
+		if (!required && !optional) {
 			continue;
 		}
 		must(typeof want.key === 'string' && want.key.length > 0,
@@ -200,12 +213,18 @@ export function planArtefacts(profile, manifest, action) {
 
 		const have = readArtefact(manifest, want.key);
 		if (!have) {
-			missing.push({ name, label: want.label || name, asset: want.asset || null, key: want.key });
+			const row = { name, label: want.label || name, asset: want.asset || null, key: want.key };
+			if (required) {
+				missing.push(row);
+			} else {
+				absent.push(row);
+			}
 			continue;
 		}
 		present.push({
 			name,
 			label: want.label || name,
+			optional,
 			url: have.url,
 			size: have.size,
 			sha256: have.sha256,
@@ -215,7 +234,7 @@ export function planArtefacts(profile, manifest, action) {
 		});
 	}
 
-	return { action, present, missing, ok: missing.length === 0 };
+	return { action, present, missing, absent, ok: missing.length === 0 };
 }
 
 // The bytes actually pushed at the device, against what the device said it can

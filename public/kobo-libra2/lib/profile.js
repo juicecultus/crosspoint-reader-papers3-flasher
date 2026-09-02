@@ -89,6 +89,20 @@ export function parseProfile(raw) {
 		for (const action of artefact.required) {
 			must(ACTIONS.includes(action), `profile: artefact ${name}: unknown action ${action}`);
 		}
+		// optional is the second list, and it means the action happens without
+		// this artefact and does something more with it. An artefact in both
+		// lists for the same action is a profile that cannot be read either way,
+		// so it is refused here rather than resolved.
+		if (artefact.optional !== undefined) {
+			must(Array.isArray(artefact.optional), `profile: artefact ${name}: optional must be an array`);
+			for (const action of artefact.optional) {
+				must(ACTIONS.includes(action), `profile: artefact ${name}: unknown action ${action}`);
+				must(
+					!artefact.required.includes(action),
+					`profile: artefact ${name}: ${action} cannot be both required and optional`,
+				);
+			}
+		}
 	}
 
 	must(isPlainObject(raw.actions), 'profile: actions must be an object');

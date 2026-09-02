@@ -355,6 +355,13 @@ dl.facts dd { margin: 0; font-family: ui-monospace, "SF Mono", Menlo, Consolas, 
 	font-size: 0.92rem;
 }
 
+/* A fact about what is about to happen, not a refusal. Quieter than the
+   surrounding copy and never red. */
+.aside {
+	color: var(--ink-soft);
+	font-size: 0.92rem;
+}
+
 /* --- progress --------------------------------------------------------- */
 
 .phase {
