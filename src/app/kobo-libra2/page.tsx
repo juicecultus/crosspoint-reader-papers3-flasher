@@ -312,7 +312,9 @@ export default function KoboLibra2Page() {
         <List.Item>Power the device fully off.</List.Item>
         <List.Item>Hold the TOP page-turn button.</List.Item>
         <List.Item>
-          Press power once briefly, and keep holding the top button for fifteen seconds. Brief matters: the bootloader keeps fastboot open for thirty seconds only while the power key is not held.
+          Press power once briefly, and keep holding the top button for fifteen
+          seconds. Brief matters: the bootloader keeps fastboot open for thirty
+          seconds only while the power key is not held.
         </List.Item>
         <List.Item>
           The screen stays dark. That is right, and the page will see the
