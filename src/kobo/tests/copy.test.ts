@@ -33,8 +33,8 @@ describe('the page copy', () => {
       'the device goes fully off first',
     );
     assert.ok(
-      prose.includes('for ten seconds'),
-      'and it holds the top button for ten seconds',
+      prose.includes('for fifteen seconds'),
+      'and it holds the top button for fifteen seconds',
     );
     assert.ok(
       prose.includes('The screen stays dark'),

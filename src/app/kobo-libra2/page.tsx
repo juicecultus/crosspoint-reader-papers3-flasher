@@ -312,7 +312,7 @@ export default function KoboLibra2Page() {
         <List.Item>Power the device fully off.</List.Item>
         <List.Item>Hold the TOP page-turn button.</List.Item>
         <List.Item>
-          Short-press power, and keep holding the top button for ten seconds.
+          Press power once briefly, and keep holding the top button for fifteen seconds. Brief matters: the bootloader keeps fastboot open for thirty seconds only while the power key is not held.
         </List.Item>
         <List.Item>
           The screen stays dark. That is right, and the page will see the
@@ -664,9 +664,18 @@ export default function KoboLibra2Page() {
                 <Text textStyle="sm" color="fg.muted">
                   The backup leaves the device running from memory, and nothing
                   can put it back into fastboot from there. So it goes: back up,
-                  hold power until the device is off, run step 3 again, Connect
-                  again, then Install. The page says so again when the backup is
-                  done.
+                  hold power until the device says Powered off, unplug the
+                  cable, wait a few seconds, plug it back in, run step 3 again,
+                  Connect again, then Install. The page says so again when the
+                  backup is done, in the device&apos;s own words.
+                </Text>
+                <Text textStyle="sm" color="fg.muted">
+                  The cable out and back in is the part that matters. Holding
+                  the top button through the charger&apos;s own restart starts
+                  the system rather than the bootloader, and the sequence with
+                  the cable out does not reach fastboot at all. If the device
+                  does restart on you, nothing is lost: the backup is on your
+                  card and the device says to run the sequence again.
                 </Text>
               </Disclosure>
             </ActionCard>
